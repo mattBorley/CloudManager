@@ -1,2 +1,0 @@
-# CloudManager
-Final Year Dissertation
