@@ -22,4 +22,5 @@ yarn-debug.log*
 yarn-error.log*
 
 .idea
-/frontend/node_modules
+Frontend/node_modules
+node_modules
