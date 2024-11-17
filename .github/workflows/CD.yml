@@ -26,7 +26,7 @@ jobs:
       # Install dependencies and run linting for React
       - name: Install dependencies and lint React
         run: |
-          cd frontend
+          cd Frontend
           npm install
           npm run lint
 
@@ -39,7 +39,7 @@ jobs:
       # Install dependencies and run linting for FastAPI
       - name: Install dependencies and lint FastAPI
         run: |
-          cd backend
+          cd Backend
           pip install -r requirements.txt
           pylint . # Adjust to match your linting rules
 
