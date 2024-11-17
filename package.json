@@ -4,5 +4,9 @@
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "framer-motion": "^11.11.8"
+  },
+
+  "devDependencies": {
+  "@babel/plugin-proposal-private-property-in-object": "^7.20.0"
   }
 }
