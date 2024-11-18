@@ -112,6 +112,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           echo "$VMPRIVATEKEY" > ~/.ssh/id_rsa
+          cat ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 40.81.128.118 >> ~/.ssh/known_hosts
 
