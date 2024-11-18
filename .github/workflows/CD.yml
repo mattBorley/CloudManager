@@ -41,7 +41,7 @@ jobs:
         run: |
           cd Backend
           pip install -r requirements.txt
-          pylint . # Adjust to match your linting rules
+          pylint .
 
   test:
     runs-on: ubuntu-latest
