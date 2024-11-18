@@ -136,12 +136,24 @@ jobs:
               sudo chmod +x /usr/local/bin/docker-compose
             fi
           
+            if ! groups | grep -q "\bdocker\b"; then
+              echo "Adding user to docker group..."
+              sudo usermod -aG docker $USER
+            fi
+          
+            if [ ! -d "/home/azureuser/project" ]; then
+              git clone https://github.com/your-repo/project.git /home/azureuser/project
+            else
+              cd /home/azureuser/project
+              git pull
+            fi
+          
             # Pull the latest Docker images
             docker pull ${{ secrets.DOCKER_USERNAME }}/frontend:latest
             docker pull ${{ secrets.DOCKER_USERNAME }}/backend:latest
           
             # Navigate to the project directory (or change if necessary)
-            cd /path/to/your/project
+            cd /home/azure/project
           
             # If necessary, stop and remove old containers
             docker-compose down
