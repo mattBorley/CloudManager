@@ -1,3 +1,7 @@
+"""
+Main file
+"""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -12,6 +16,10 @@ app.add_middleware(
 )
 @app.get("/")
 async def read_data():
+    """
+    Main function
+    :return: Test Text to Frontend
+    """
     return {
         "message": "Hello from FastAPI!",
         "status": "success",
