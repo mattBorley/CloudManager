@@ -59,14 +59,14 @@ jobs:
       # Run React frontend tests
       - name: Run React tests
         run: |
-          cd frontend
+          cd Frontend
           npm install
           npm test -- --ci --silent --maxWorkers=1
 
       # Run FastAPI backend tests
       - name: Run FastAPI tests
         run: |
-          cd backend
+          cd Backend
           pip install -r requirements.txt
           pytest
 
@@ -88,14 +88,14 @@ jobs:
       # Build and push Docker image for frontend
       - name: Build and push React frontend Docker image
         run: |
-          cd frontend
+          cd Frontend
           docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/frontend:latest
 
       # Build and push Docker image for backend
       - name: Build and push FastAPI backend Docker image
         run: |
-          cd backend
+          cd Backend
           docker build -t ${{ secrets.DOCKER_USERNAME }}/backend:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/backend:latest
 
