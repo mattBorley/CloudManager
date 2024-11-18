@@ -1,6 +1,6 @@
 import logo from './logo.svg';
 import './Main.css';
-import DataFetcher from "./DataFetcher";
+//import DataFetcher from "./DataFetcher";
 
 
 function Main() {
