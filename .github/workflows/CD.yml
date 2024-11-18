@@ -103,17 +103,47 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      # Log in to Docker Hub or another Docker registry
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+      #Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # Pull Docker images and deploy with Docker Compose
-      - name: Pull Docker images and deploy
+      #Set up the SSH private key from GitHub secrets
+      - name: Set up SSH private key
         run: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/webapp-frontend:latest
-          docker pull ${{ secrets.DOCKER_USERNAME }}/webapp-backend:latest
-          docker-compose down
-          docker-compose up -d
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 40.81.128.118 >> ~/.ssh/known_hosts
+
+      #Deploying to VM using SSH
+      - name: Deploy to VM
+        run: |
+          ssh -i ~/.ssh/id_rsa azureuser@40.81.128.118 << 'EOF'
+            if ! command -v docker &> /dev/null
+            then
+              echo "Docker not found, installing Docker..."
+              curl -fsSL https://get.docker.com -o get-docker.sh
+              sudo sh get-docker.sh
+              sudo usermod -aG docker azureuser
+            fi
+          
+            if ! command -v docker-compose &> /dev/null
+            then
+              echo "Docker Compose not found, installing Docker Compose..."
+              sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            fi
+          
+            # Pull the latest Docker images
+            docker pull ${{ secrets.DOCKER_USERNAME }}/frontend:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/backend:latest
+          
+            # Navigate to the project directory (or change if necessary)
+            cd /path/to/your/project
+          
+            # If necessary, stop and remove old containers
+            docker-compose down
+          
+            # Bring up the containers (start the app)
+            docker-compose up -d
+          EOF
