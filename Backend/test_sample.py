@@ -1,2 +1,5 @@
+"""This module contains test cases for testing sample functionality."""
+
 def test_example():
-    assert 1 == 1
+    """Test function for example."""
+    assert True
