@@ -118,7 +118,7 @@ jobs:
       #Deploying to VM using SSH
       - name: Deploy to VM
         run: |
-          ssh -i ~/.ssh/id_rsa azureuser@40.81.128.118 << 'EOF'
+          ssh -T -i ~/.ssh/id_rsa azureuser@40.81.128.118 << 'EOF'
             if ! command -v docker &> /dev/null
             then
               echo "Docker not found, installing Docker..."
