@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # React Frontend Service
+  frontend:
+    image: ${DOCKER_USERNAME}/frontend:latest
+    ports:
+      - "3000:80"  # Expose port 3000 on the host machine and map it to port 80 in the container
+    depends_on:
+      - backend  # Ensure that the backend service is started before the frontend
+
+  # FastAPI Backend Service
+  backend:
+    image: ${DOCKER_USERNAME}/backend:latest
+    ports:
+      - "8000:8000"  # Expose port 8000 on the host machine and map it to port 8000 in the container
+    environment:
+      - DATABASE_URL=mysql+mysqlconnector://fastapi_user:faster-AP1-password@CloudManagerContainerDatabase:3306/mydatabase  # MySQL connection string for FastAPI
+    depends_on:
+      - db  # Ensure that the MySQL database is available before the backend starts
+
+  # MySQL Database Service
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: Docker-2024-Moria-!-
+      MYSQL_DATABASE: CloudManagerContainerDatabase
+      MYSQL_USER: fastapi_user
+      MYSQL_PASSWORD: faster-AP1-password
+    ports:
+      - "3306:3306"  # Expose port 3306 for MySQL database (host:container)
+    volumes:
+      - mysql-data:/var/lib/mysql  # Use a Docker volume to persist MySQL data between container restarts
+
+volumes:
+  mysql-data:  # Define a named volume to store MySQL data persistently
