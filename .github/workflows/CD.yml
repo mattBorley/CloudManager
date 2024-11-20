@@ -173,11 +173,11 @@ jobs:
         run: |
           ssh -T -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
           # Navigate to the project directory (or change if necessary)
-          cd /home/${{ secrets.VM_USERNAME }}/project/CloudManager
+          cd /home/${{ secrets.VM_USERNAME }}/project
           
           # If necessary, stop and remove old containers
-          sudo docker-compose down
+          sudo docker-compose -f docker-compose.prod.yml down
           
           # Bring up the containers (start the app)
-          sudo docker-compose up -d
+          sudo docker-compose -f docker-compose.prod.yml up -d
           EOF
