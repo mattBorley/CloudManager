@@ -111,7 +111,7 @@ jobs:
       - name: Set up SSH private key
         run: |
           mkdir -p ~/.ssh
-          printf "%s" ${{ secrets.VMPRIVATEKEY }} > ~/.ssh/id_rsa
+          echo "${{ secrets.VMPRIVATEKEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.VM_IP }} >> ~/.ssh/known_hosts
 
