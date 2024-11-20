@@ -173,7 +173,7 @@ jobs:
         run: |
           ssh -T -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
           # Navigate to the project directory (or change if necessary)
-          cd /home/${{ secrets.VM_USERNAME }}/project
+          cd /home/${{ secrets.VM_USERNAME }}/project/CloudManager
           
           # If necessary, stop and remove old containers
           sudo docker-compose down
