@@ -111,59 +111,78 @@ jobs:
       - name: Set up SSH private key
         run: |
           mkdir -p ~/.ssh
-          echo "$VMPRIVATEKEY" > ~/.ssh/id_rsa
+          echo ${{ secrets.VMPRIVATEKEY }} > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 40.81.128.118 >> ~/.ssh/known_hosts
-        env:
-          VMPRIVATEKEY: ${{ secrets.VMPRIVATEKEY }}
 
       #Deploying to VM using SSH
-      - name: Deploy to VM
+      - name: SSH into VM
         run: |
           ssh -T -i ~/.ssh/id_rsa azureuser@40.81.128.118 << 'EOF'
-          
-            if ! command -v docker &> /dev/null
-            then
-              echo "Docker not found, installing Docker..."
-              curl -fsSL https://get.docker.com -o get-docker.sh
-              sudo sh get-docker.sh
-              sudo usermod -aG docker azureuser
+
+      - name: Check Docker Installation
+        run: |
+          ssh -T -i ~/.ssh/id_rsa azureuser@40.81.128.118 << 'EOF'
+          if ! command -v docker &> /dev/null
+          then
+            echo "Docker not found, installing Docker..."
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sudo sh get-docker.sh
+            sudo usermod -aG docker azureuser
             fi
-          
-            if ! command -v docker-compose &> /dev/null
-            then
-              echo "Docker Compose not found, installing Docker Compose..."
-              sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-              sudo chmod +x /usr/local/bin/docker-compose
-            fi
-          
-            # Set up the deploy key for GitHub access (in VM)
-            echo "$GITHUB_DEPLOY_KEY" > ~/.ssh/github_deploy_key
-            chmod 600 ~/.ssh/github_deploy_key
-            echo "Host github.com" >> ~/.ssh/config
-            echo "  IdentityFile ~/.ssh/github_deploy_key" >> ~/.ssh/config
-            echo "  StrictHostKeyChecking no" >> ~/.ssh/config
-            
-            # Clone or pull the repository from GitHub
-            if [ ! -d "/home/azureuser/project" ]; then
-              git clone git@github.com:mattBorley/CloudManager.git /home/azureuser/project
-            else
-              cd /home/azureuser/project
-              git pull
-            fi
-          
-            # Pull the latest Docker images
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/frontend:latest
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/backend:latest
-          
-            # Navigate to the project directory (or change if necessary)
-            cd /home/azure/project
-          
-            # If necessary, stop and remove old containers
-            sudo docker-compose down
-          
-            # Bring up the containers (start the app)
-            sudo docker-compose up -d
           EOF
-        env:
-          GITHUB_DEPLOY_KEY: ${{ secrets.VMPRIVATEKEY }}
+
+      - name: Check Docker Compose Installation
+        run: |
+          ssh -T -i ~/.ssh/id_rsa azureuser@40.81.128.118 << 'EOF'
+          if ! command -v docker-compose &> /dev/null
+          then
+            echo "Docker Compose not found, installing Docker Compose..."
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+          fi
+          EOF
+
+      - name: Set up Deploy Key
+        run: |
+          ssh -T -i ~/.ssh/id_rsa azureuser@40.81.128.118 << 'EOF'
+          # Set up the deploy key for GitHub access (in VM)
+          echo ${{ secrets.VMPRIVATEKEY }} > ~/.ssh/github_deploy_key
+          chmod 600 ~/.ssh/github_deploy_key
+          echo "Host github.com" >> ~/.ssh/config
+          echo "  IdentityFile ~/.ssh/github_deploy_key" >> ~/.ssh/config
+          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+          EOF
+
+      - name: Pull Repo from Git
+        run: |
+          ssh -T -i ~/.ssh/id_rsa azureuser@40.81.128.118 << 'EOF'
+          # Clone or pull the repository from GitHub
+          if [ ! -d "/home/azureuser/project" ]; then
+            git clone git@github.com:mattBorley/CloudManager.git /home/azureuser/project
+          else
+            cd /home/azureuser/project
+            git pull
+          fi
+          EOF
+
+      - name: Pull Docker Images from Registry
+        run: |
+          ssh -T -i ~/.ssh/id_rsa azureuser@40.81.128.118 << 'EOF'
+          # Pull the latest Docker images
+          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/frontend:latest
+          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/backend:latest
+          EOF
+
+      - name: Deploy App
+        run: |
+          ssh -T -i ~/.ssh/id_rsa azureuser@40.81.128.118 << 'EOF'
+          # Navigate to the project directory (or change if necessary)
+          cd /home/azure/project
+          
+          # If necessary, stop and remove old containers
+          sudo docker-compose down
+          
+          # Bring up the containers (start the app)
+          sudo docker-compose up -d
+          EOF
