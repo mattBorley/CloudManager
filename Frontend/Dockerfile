@@ -5,20 +5,23 @@ FROM node:18 AS builder
 WORKDIR /AppFrontend
 
 # Step 3: Copy package.json and install dependencies
-COPY package*.json ./
+COPY package*.json .
 RUN npm install
 
-# Step 4: Copy the rest of the React app source code
+# Step 4: Build the app for production
 COPY . .
-
-# Step 5: Build the app for production
 RUN npm run build
 
-# Step 6: Use a lightweight Nginx server to serve the built files
+
+# Step 5: Use a lightweight Nginx server to serve the built files
 FROM nginx:alpine
 COPY --from=builder /AppFrontend/build /usr/share/nginx/html
 
-# Step 7: Expose port 80 and define the entry point
+# Copy the custom Nginx configuration file into the container
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Step 6: Expose port 80 for Nginx
 EXPOSE 80
 
+# Step 7: Start Nginx in the foreground
 CMD ["nginx", "-g", "daemon off;"]
