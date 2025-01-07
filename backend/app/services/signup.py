@@ -1,17 +1,21 @@
+"""
+Sign Up file
+"""
+
 from fastapi import HTTPException
 import mysql.connector
-
-# try:
-#     # First, attempt to use the absolute import
-from ..models.Database import get_db_connection
-# except ImportError:
-#     # If that fails (e.g., during reloading), use the relative import
-#     from Backend.app.models.Database import get_db_connection
+from ..models.database import get_db_connection
 
 
-
-async def storeUserInDatabase (email, name, hash):
+async def store_user_in_database(email, name, hashed_password):
+    """
+    Checks there is no user with email, and if not, adds user to the database.
+    """
     connection = get_db_connection()
+    if connection:
+        print("Database connection successful")
+    else:
+        print("Database connection failed")
     cursor = connection.cursor()
 
     try:
@@ -19,8 +23,10 @@ async def storeUserInDatabase (email, name, hash):
         if cursor.fetchone():
             raise HTTPException(status_code=400, detail="Email already registered")
 
-        cursor.execute("INSERT INTO users (email, name, hashed_password) VALUES (%s, %s, %s)",
-                       (email, name, hash))
+        cursor.execute(
+            "INSERT INTO users (email, name, hashed_password) VALUES (%s, %s, %s)",
+            (email, name, hashed_password),
+        )
         connection.commit()
         return True
     except mysql.connector.Error as e:
@@ -28,4 +34,3 @@ async def storeUserInDatabase (email, name, hash):
     finally:
         cursor.close()
         connection.close()
-

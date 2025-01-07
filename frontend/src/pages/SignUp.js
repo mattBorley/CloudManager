@@ -1,19 +1,8 @@
 import React, {useState} from 'react';
-import {
-    Box,
-    Button,
-    Card,
-    FormControl,
-    FormLabel,
-    Heading,
-    Input,
-    VStack,
-    Text,
-    HStack,
-    InputGroup, InputRightElement
-} from "@chakra-ui/react";
+import { Box, Button, Card, FormControl, FormLabel, Heading, Input, VStack, Text, InputGroup, InputRightElement } from "@chakra-ui/react";
 import '../styling/Login.css';
 import {useNavigate} from "react-router-dom";
+import axios from "axios";
 
 function SignUp() {
     const navigate = useNavigate()
@@ -39,26 +28,28 @@ function SignUp() {
         };
 
         try {
-            const response = await fetch('http://localhost:8000/api/users/signup', {
-               method: 'POST',
-               headers: {
-                   'Content-Type': 'application/json',
-               },
-                body: JSON.stringify(newUser)
+            const response = await axios.post('http://localhost:8000/api/users/signup', newUser, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             });
 
             // Log the status code and status text for debugging
-             console.log("Response Status:", response.status);
-             console.log("Response Status Text:", response.statusText);
+            console.log("Response Status:", response.status);
+            console.log("Response Status Text:", response.statusText);
 
-            const data = await response.json()
+            const data = response.data;
 
-            if (response.ok) {
-                if (data.success) {
-                    navigate("/main");
-                }
+            if (response.status === 200 && data.success) {
+
+                const { accessToken, refreshToken } = data;
+
+                localStorage.setItem('accessToken', accessToken);
+                localStorage.setItem('refreshToken', refreshToken);
+
+                navigate("/main");
             } else {
-                setErrorMessage(typeof data.detail === 'string' ? data.detail: 'Error connecting to the server 2.');
+                setErrorMessage(typeof data.detail === 'string' ? data.detail : 'Error connecting to the server 2.');
             }
         } catch (error) {
             setErrorMessage('Error connecting to the server.')
