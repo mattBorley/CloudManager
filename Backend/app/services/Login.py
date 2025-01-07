@@ -4,12 +4,12 @@ from fastapi import HTTPException
 
 from ..models.Database import get_db_connection
 
-def login(email, password):
+def verifyLogin(email, password):
     connection = get_db_connection()
     cursor = connection.cursor()
 
     try:
-        cursor.execute("SELECT password FROM users WHERE email=%s", (email,))
+        cursor.execute("SELECT hashed_password FROM users WHERE email=%s", (email,))
         user = cursor.fetchone()
 
         if user:

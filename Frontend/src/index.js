@@ -11,6 +11,7 @@ import Login from './pages/Login'
 import Main from './pages/Main'
 import PageTitle from "./components/PageTitle";
 import Layout from "./components/Layout";
+import { ProtectedRouteFromLoggedOut, ProtectedRouteFromLoggedIn } from "./components/ProtectedRoutes";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -22,27 +23,33 @@ root.render(
               <Route path="/" element={<Navigate to = "/login" replace/>}/>
 
               <Route path="/login" element={
-                  <PageTitle title={"Login - Cloud Storage Manager"}>
-                      <Login/>
-                  </PageTitle>}
-              />
-              <Route path="/main" element={
-                  <Layout>
-                      <PageTitle title={"Main - Cloud Storage Manager"}>
-                          <Main/>
+                  <ProtectedRouteFromLoggedIn>
+                      <PageTitle title={"Login - Cloud Storage Manager"}>
+                          <Login/>
                       </PageTitle>
-                  </Layout>}
-              />
+                  </ProtectedRouteFromLoggedIn>
+              }/>
+              <Route path="/main" element={
+                  <ProtectedRouteFromLoggedOut>
+                      <Layout>
+                          <PageTitle title={"Main - Cloud Storage Manager"}>
+                              <Main/>
+                          </PageTitle>
+                      </Layout>
+                  </ProtectedRouteFromLoggedOut>
+              }/>
               <Route path = "/signup" element={
-                  <PageTitle title={"Sign Up - Cloud Storage Manager"}>
-                      <SignUp/>
-                  </PageTitle>}
-              />
+                  <ProtectedRouteFromLoggedIn>
+                      <PageTitle title={"Sign Up - Cloud Storage Manager"}>
+                          <SignUp/>
+                      </PageTitle>
+                  </ProtectedRouteFromLoggedIn>
+              }/>
               <Route path = "/passwordrecovery" element={
                   <PageTitle title={"Recover your password - Cloud Storage Manager"}>
                       <PasswordRecovery/>
-                  </PageTitle>}
-              />
+                  </PageTitle>
+              }/>
           </Routes>
       </Router>
     </ChakraProvider>

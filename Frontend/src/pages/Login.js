@@ -1,13 +1,70 @@
 import {Box, Button, Card, FormControl, FormLabel, Heading, Input, VStack, Text, InputGroup, InputRightElement} from "@chakra-ui/react";
 import '../styling/Login.css';
 import {useNavigate} from "react-router-dom";
-import {useState} from "react";
+import React, {useState} from "react";
+import axios from "axios";
 
 function Login() {
     const navigate = useNavigate()
-    const handleLogin = () => {
-        navigate("/main")
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    const isValidEmail = (email) => {
+        return emailRegex.test(email);
+    }
+
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+
+        if (email === "" && password === "") {
+            setErrorMessage("Please enter your credentials.");
+        } else if (email === "" || !isValidEmail(email)){
+            setErrorMessage("Please enter valid email.");
+        } else if (password === "") {
+            setErrorMessage("Please enter your password.");
+        } else {
+
+            const userLoggingIn = {
+                email,
+                password
+            };
+
+            try {
+                const response = await axios.post('http://localhost:8000/api/users/login', userLoggingIn, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                // Log the status code and status text for debugging
+                console.log("Response Status:", response.status);
+                console.log("Response Status Text:", response.statusText);
+
+                const data = response.data;
+
+                console.log("Response Data: ", data)
+
+                if (response.status === 200 && data.success) {
+
+                    const { access_token, refresh_token } = data;
+
+                    localStorage.setItem('accessToken', access_token);
+                    console.log("Access Token: " + access_token)
+                    localStorage.setItem('refreshToken', refresh_token);
+                    console.log("Refresh Token: " + refresh_token)
+
+                    navigate("/main");
+                } else {
+                    setErrorMessage(typeof data.detail === 'string' ? data.detail : 'Error connecting to the server 2.');
+                }
+            } catch (error) {
+                setErrorMessage('Error connecting to the server.');
+            }
+        }
     };
+
     const toSignUp = () => {
         navigate("/signup")
     };
@@ -19,6 +76,15 @@ function Login() {
     const togglePasswordVisibility = () => {
         setShowPassword((prevShowPassword) => !prevShowPassword);
     };
+
+    const handleEmailChange = (event) => {
+        setEmail(event.target.value);
+    };
+
+    const handlePasswordChange = (event) => {
+        setPassword(event.target.value);
+    };
+
     return(
         <Card
             className={"Background-Box"}
@@ -60,7 +126,7 @@ function Login() {
                         <FormLabel fontSize={"lg"}>
                             Email
                         </FormLabel>
-                        <Input type={"email"} placeholder={"Enter your email"} width={"500px"} />
+                        <Input type={"email"} placeholder={"Enter your email"} width={"500px"} onChange={handleEmailChange}/>
                     </FormControl>
                     <FormControl id={"password"} isRequired mb={6}>
                         <FormLabel fontSize={"lg"}>
@@ -71,6 +137,7 @@ function Login() {
                             type={showPassword ? "text" : "password"}
                             placeholder={"Enter your password"}
                             pr={20}
+                            onChange={handlePasswordChange}
                           />
                           <InputRightElement width="4.5rem">
                             <Button
@@ -87,8 +154,13 @@ function Login() {
                             </Button>
                           </InputRightElement>
                         </InputGroup>
+                        {errorMessage && (
+                          <Text color="red.500" mt={2}>
+                            ❌ {errorMessage}
+                          </Text>
+                        )}
                     </FormControl>
-                    <Button type={"submit"} bg={"#3e3e3e"} color={"white"} _hover={{ bg: "#4e4e4e"}} onClick={handleLogin}>
+                    <Button type={"button"} bg={"#3e3e3e"} color={"white"} _hover={{ bg: "#4e4e4e"}} onClick={handleLogin}>
                         Log In
                     </Button>
                     <Text mt="4" textAlign="center" fontSize="sm" color="#4a5568">

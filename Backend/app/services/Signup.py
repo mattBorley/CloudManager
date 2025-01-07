@@ -1,17 +1,13 @@
 from fastapi import HTTPException
 import mysql.connector
-
-# try:
-#     # First, attempt to use the absolute import
 from ..models.Database import get_db_connection
-# except ImportError:
-#     # If that fails (e.g., during reloading), use the relative import
-#     from Backend.app.models.Database import get_db_connection
-
-
 
 async def storeUserInDatabase (email, name, hash):
     connection = get_db_connection()
+    if connection:
+        print("Database connection successful")
+    else:
+        print("Database connection failed")
     cursor = connection.cursor()
 
     try:

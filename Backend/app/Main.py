@@ -8,6 +8,11 @@ try:
     from app.routers.Users import router as usersRouter
 except ImportError:
     from routers.Users import router as usersRouter
+
+try:
+    from app.routers.Tokens import router as  tokensRouter
+except ImportError:
+    from routers.Tokens import router as tokensRouter
 app = FastAPI()
 
 
@@ -20,6 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(usersRouter, prefix="/api/users", tags=["users"])
+app.include_router(tokensRouter, prefix="/api/tokens", tags=["tokens"])
 
 @app.get("/")
 def read_data():
