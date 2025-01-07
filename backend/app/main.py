@@ -1,18 +1,20 @@
 """
 Main file
 """
+
 from fastapi import FastAPI
+
 from fastapi.middleware.cors import CORSMiddleware
 
 try:
     from app.routers.Users import router as usersRouter
 except ImportError:
-    from routers.Users import router as usersRouter
+    from routers.users import router as usersRouter
 
 try:
-    from app.routers.Tokens import router as  tokensRouter
+    from app.routers.Tokens import router as tokensRouter
 except ImportError:
-    from routers.Tokens import router as tokensRouter
+    from routers.tokens import router as tokensRouter
 app = FastAPI()
 
 
@@ -27,17 +29,15 @@ app.add_middleware(
 app.include_router(usersRouter, prefix="/api/users", tags=["users"])
 app.include_router(tokensRouter, prefix="/api/tokens", tags=["tokens"])
 
+
 @app.get("/")
 def read_data():
     """
     Main function
-    :return: Test Text to Frontend
+    :return: Test Text to frontend
     """
     return {
         "message": "Hello from FastAPI!",
         "status": "success",
-        "data": {
-            "id": 1,
-            "name": "Sample Item"
-        }
+        "data": {"id": 1, "name": "Sample Item"},
     }

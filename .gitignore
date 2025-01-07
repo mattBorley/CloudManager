@@ -8,7 +8,7 @@
 /coverage
 
 # production
-Frontend/build
+frontend/build
 
 # misc
 .DS_Store
@@ -22,8 +22,8 @@ yarn-debug.log*
 yarn-error.log*
 
 .idea
-Frontend/node_modules
+frontend/node_modules
 node_modules
 .env
 
-Backend/oldRequirements
+backend/oldRequirements

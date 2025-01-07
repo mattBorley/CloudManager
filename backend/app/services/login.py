@@ -1,10 +1,18 @@
+"""
+Log In File
+"""
+
 import bcrypt
 import mysql.connector
 from fastapi import HTTPException
 
-from ..models.Database import get_db_connection
+from ..models.database import get_db_connection
 
-def verifyLogin(email, password):
+
+def verify_login(email, password):
+    """
+    Verifies if the users credentials are correct and if so, establishes tokens.
+    """
     connection = get_db_connection()
     cursor = connection.cursor()
 
@@ -14,10 +22,9 @@ def verifyLogin(email, password):
 
         if user:
             stored_hash = user[0]
-            if bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8')):
+            if bcrypt.checkpw(password.encode("utf-8"), stored_hash.encode("utf-8")):
                 return {"message": "Login successful", "success": True}
-            else:
-                return {"message": "Invalid password - login failed", "success": False}
+            return {"message": "Invalid password - login failed", "success": False}
         return {"message": "User not found - login failed", "success": False}
     except mysql.connector.Error as e:
         raise HTTPException(status_code=400, detail=f"Database error: {e}")

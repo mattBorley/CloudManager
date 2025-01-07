@@ -1,7 +1,14 @@
-import mysql.connector
-from mysql.connector import Error
+"""
+Database connection file
+"""
+
 import os
 import logging
+
+from fastapi import HTTPException
+import mysql.connector
+from mysql.connector import Error
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,9 +27,13 @@ DB_CONFIG = {
 
 logger = logging.getLogger(__name__)
 
+
 def get_db_connection():
+    """
+    Establishes connection to database
+    """
     try:
         connection = mysql.connector.connect(**DB_CONFIG)
         return connection
     except Error as e:
-        raise Exception(f"Database connection error: {e}")
+        raise HTTPException(status_code=500, detail=f"Database connection error: {e}")
