@@ -31,7 +31,7 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: ${DATABASE_URL_DEV}
+      DATABASE_URL: ${DATABASE_URL}
     depends_on:
       - db-dev  # Ensure that the MySQL database is available before the backend starts
 
