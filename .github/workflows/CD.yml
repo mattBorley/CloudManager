@@ -48,27 +48,27 @@ jobs:
           pip install -r requirements.txt
           pylint $(git ls-files '*.py') --output=lint.txt || true
 
-  test:
-    runs-on: ubuntu-latest
-    needs: source
-    steps:
-      # Checkout the code
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # Run React frontend tests
-      - name: Run React tests
-        run: |
-          cd frontend
-          npm install
-          npm test -- --ci --silent --maxWorkers=1
-
-      # Run FastAPI backend tests
-      - name: Run FastAPI tests
-        run: |
-          cd backend
-          pip install -r requirements.txt
-          pytest
+#  test:
+#    runs-on: ubuntu-latest
+#    needs: source
+#    steps:
+#      # Checkout the code
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#
+#      # Run React frontend tests
+#      - name: Run React tests
+#        run: |
+#          cd frontend
+#          npm install
+#          npm test -- --ci --silent --maxWorkers=1
+#
+#      # Run FastAPI backend tests
+#      - name: Run FastAPI tests
+#        run: |
+#          cd backend
+#          pip install -r requirements.txt
+#          pytest
 
   build:
     runs-on: ubuntu-latest

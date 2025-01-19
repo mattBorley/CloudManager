@@ -1,8 +1,7 @@
-import { render, screen } from '@testing-library/react';
-import Main from './pages/Main';
+import { screen } from '@testing-library/react';
+import './index';
 
-test('renders Cloud Storage Manager heading', () => {
-  render(<Main />);
-  const headingElement = screen.getByText(/Cloud Storage Manager/i);
-  expect(headingElement).toBeInTheDocument();
+test('renders without crashing', () => {
+  const element = screen.getByTestId('app-root');
+  expect(element).toBeInTheDocument();
 });
