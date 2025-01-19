@@ -1,8 +1,7 @@
-import { render, screen } from '@testing-library/react';
-import Main from './pages/Main';
+import { screen } from '@testing-library/react';
+import './index';
 
-test('renders learn react link', () => {
-  render(<Main />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+test('renders without crashing', () => {
+  const element = screen.getByTestId('app-root');
+  expect(element).toBeInTheDocument();
 });

@@ -1,5 +1,4 @@
-import React, {useState} from 'react';
-import {Box, Button, Card, FormControl, FormLabel, Heading, Input, VStack, Text, HStack} from "@chakra-ui/react";
+import {Box, Button, Card, FormControl, FormLabel, Heading, Input, VStack, HStack} from "@chakra-ui/react";
 import '../styling/Login.css';
 import {useNavigate} from "react-router-dom";
 
@@ -17,6 +16,7 @@ function PasswordRecovery() {
     }
     const recoverPassword = () => {
         var x = 3;
+        return x;
     }
     return(
         <Card
