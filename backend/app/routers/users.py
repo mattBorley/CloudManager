@@ -1,5 +1,5 @@
 """
-Users file
+Users endpoints
 """
 
 from fastapi import APIRouter, HTTPException

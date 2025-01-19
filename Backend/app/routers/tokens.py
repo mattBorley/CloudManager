@@ -4,17 +4,17 @@ Token refresh file
 
 from datetime import datetime
 import jwt
-from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, Request
 
 
 from ..models.token_models import RefreshToken
-from ..utils.token_generation import create_access_token, get_payload
+from ..utils.token_generation import create_access_token, get_payload, generate_csrf_token
 
 router = APIRouter()
 
-
 @router.post("/refresh")
-async def resfresh(request: RefreshToken):
+async def refresh(request: RefreshToken):
     """
     Refresh endpoint
     Refresh Access Token using Refresh Token
@@ -34,3 +34,15 @@ async def resfresh(request: RefreshToken):
 
     except jwt.JWTError:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+@router.get("/get_csrf_token")
+def get_csrf_token(request: Request):
+    """
+    Generates new csrf token for each session.
+    """
+    csrf_token = generate_csrf_token()
+    request.session["csrf_token"] = csrf_token
+
+    response = JSONResponse({"csrf_token": csrf_token})
+    response.set_cookie("csrf_token", csrf_token, httponly=True, secure=True, samesite="Strict")
+    return response

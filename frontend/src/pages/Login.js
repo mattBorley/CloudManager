@@ -6,9 +6,11 @@ import axios from "axios";
 
 function Login() {
     const navigate = useNavigate()
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     const isValidEmail = (email) => {
@@ -33,20 +35,21 @@ function Login() {
             };
 
             try {
-                const response = await axios.post('http://localhost:8000/api/users/login', userLoggingIn, {
+                const accessResponse = await axios.post('http://localhost:8000/api/users/login', userLoggingIn, {
                     headers: {
                         'Content-Type': 'application/json',
-                    }
-                })
-                // Log the status code and status text for debugging
-                console.log("Response Status:", response.status);
-                console.log("Response Status Text:", response.statusText);
+                    },
+                    withCredentials: true,
+                });
 
-                const data = response.data;
+                console.log("Response Status:", accessResponse.status);
+                console.log("Response Status Text:", accessResponse.statusText);
+
+                const data = accessResponse.data;
 
                 console.log("Response Data: ", data)
 
-                if (response.status === 200 && data.success) {
+                if (accessResponse.status === 200 && data.success) {
 
                     const { access_token, refresh_token } = data;
 
@@ -54,6 +57,16 @@ function Login() {
                     console.log("Access Token: " + access_token)
                     localStorage.setItem('refreshToken', refresh_token);
                     console.log("Refresh Token: " + refresh_token)
+
+                    const csrfResponse = await axios.get(
+                        "api/tokens/get_csrf_token",
+                        { withCredentials: true }
+                    );
+
+                    if (!(csrfResponse.data && csrfResponse.data.csrf_token)) {
+                        setErrorMessage("CSRF Token not generated");
+                        throw new Error("CSRF token not found in response");
+                    }
 
                     navigate("/main");
                 } else {
@@ -71,7 +84,6 @@ function Login() {
     const toPasswordRecovery = () => {
         navigate("/passwordrecovery")
     };
-    const [showPassword, setShowPassword] = useState(false);
 
     const togglePasswordVisibility = () => {
         setShowPassword((prevShowPassword) => !prevShowPassword);
@@ -87,7 +99,7 @@ function Login() {
 
     return(
         <Card
-            className={"Background-Box"}
+            bg={"#4e4e4e"}
             position={"absolute"}
             minH={"100%"}
             w={"100%"}
@@ -100,7 +112,8 @@ function Login() {
             <Heading
                 as={"h1"}
                 className={"Heading-style"}
-                mt={10}>
+                mt={10}
+            >
                 Cloud Storage Manager
             </Heading>
             <Box
@@ -123,13 +136,13 @@ function Login() {
                             Login
                     </Heading>
                     <FormControl id={"email"} isRequired>
-                        <FormLabel fontSize={"lg"}>
+                        <FormLabel fontSize={"18px"}>
                             Email
                         </FormLabel>
                         <Input type={"email"} placeholder={"Enter your email"} width={"500px"} onChange={handleEmailChange}/>
                     </FormControl>
                     <FormControl id={"password"} isRequired mb={6}>
-                        <FormLabel fontSize={"lg"}>
+                        <FormLabel fontSize={"18px"}>
                             Password
                         </FormLabel>
                         <InputGroup width={"500px"}>
@@ -144,9 +157,9 @@ function Login() {
                               size="sm"
                               width={"40"}
                               onClick={togglePasswordVisibility}
-                              bg={"#3e3e3e"}
+                              bg={"#4e4e4e"}
                               color={"white"}
-                              _hover={{ bg: "#4e4e4e" }}
+                              _hover={{ bg: "#5e5e5e" }}
                               borderRadius={2}
                               mr={2}
                             >
@@ -160,7 +173,7 @@ function Login() {
                           </Text>
                         )}
                     </FormControl>
-                    <Button type={"button"} bg={"#3e3e3e"} color={"white"} _hover={{ bg: "#4e4e4e"}} onClick={handleLogin}>
+                    <Button type={"button"} bg={"#4e4e4e"} color={"white"} _hover={{ bg: "#5e5e5e"}} onClick={handleLogin}>
                         Log In
                     </Button>
                     <Text mt="4" textAlign="center" fontSize="sm" color="#4a5568">
