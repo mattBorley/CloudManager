@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import Main from './pages/Main';
 
-test('renders learn react link', () => {
+test('renders Cloud Storage Manager heading', () => {
   render(<Main />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  const headingElement = screen.getByText(/Cloud Storage Manager/i);
+  expect(headingElement).toBeInTheDocument();
 });
