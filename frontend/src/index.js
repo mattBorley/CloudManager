@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import ReactDOM from 'react-dom/client';
 import { ChakraProvider } from "@chakra-ui/react";
 import './styling/index.css';
@@ -12,7 +12,7 @@ import Main from './pages/Main'
 import AddCloud from './pages/AddCloud'
 import PageTitle from "./components/PageTitle";
 import { ProtectedRouteFromLoggedOut, ProtectedRouteFromLoggedIn } from "./components/ProtectedRoutes";
-import axios from "axios";
+import DropboxOAuth from "./pages/DropboxCallback";
 
 const CSRF_Token_Context = React.createContext(null);
 const App = () => {
@@ -24,26 +24,27 @@ const App = () => {
                 <ChakraProvider>
                     <Router>
                         <Routes>
-                            {/*Navigate users to login page*/}
                             <Route path="/" element={<Navigate to = "/login" replace/>}/>
                             <Route path="/login" element={
-                                <ProtectedRouteFromLoggedIn>
+                                // <ProtectedRouteFromLoggedIn>
                                     <PageTitle title={"Login - Cloud Storage Manager"}>
                                         <Login setCsrfToken={setCsrfToken} />
                                     </PageTitle>
-                                </ProtectedRouteFromLoggedIn>
+                                // </ProtectedRouteFromLoggedIn>
                             }/>
                             <Route path = "/signup" element={
-                                <ProtectedRouteFromLoggedIn>
+                                // <ProtectedRouteFromLoggedIn>
                                     <PageTitle title={"Sign Up - Cloud Storage Manager"}>
                                         <SignUp setCsrfToken={setCsrfToken} />
                                     </PageTitle>
-                                </ProtectedRouteFromLoggedIn>
+                                // </ProtectedRouteFromLoggedIn>
                             }/>
                             <Route path = "/passwordrecovery" element={
-                                <PageTitle title={"Recover your password - Cloud Storage Manager"}>
-                                    <PasswordRecovery/>
-                                </PageTitle>
+                                // <ProtectedRouteFromLoggedIn>
+                                    <PageTitle title={"Recover your password - Cloud Storage Manager"}>
+                                        <PasswordRecovery/>
+                                    </PageTitle>
+                                // </ProtectedRouteFromLoggedIn>
                             }/>
                             <Route path="/main" element={
                                 // <ProtectedRouteFromLoggedOut>
@@ -56,6 +57,13 @@ const App = () => {
                                 // <ProtectedRouteFromLoggedOut>
                                    <PageTitle title={"Add Cloud Service - Cloud Storage Manager"}>
                                        <AddCloud/>
+                                   </PageTitle>
+                                // </ProtectedRouteFromLoggedOut>
+                            }/>
+                            <Route path="/dropbox-callback" element={
+                                // <ProtectedRouteFromLoggedOut>
+                                   <PageTitle title={"Dropbox Callback - Cloud Storage Manager"}>
+                                       <DropboxOAuth/>
                                    </PageTitle>
                                 // </ProtectedRouteFromLoggedOut>
                             }/>

@@ -60,7 +60,9 @@ function Login() {
 
                     const csrfResponse = await axios.get(
                         "api/tokens/get_csrf_token",
-                        { withCredentials: true }
+                        {
+                            withCredentials: true
+                        }
                     );
 
                     if (!(csrfResponse.data && csrfResponse.data.csrf_token)) {
@@ -136,13 +138,13 @@ function Login() {
                             Login
                     </Heading>
                     <FormControl id={"email"} isRequired>
-                        <FormLabel fontSize={"18px"}>
+                        <FormLabel fontSize={"18px"} color={"white"}>
                             Email
                         </FormLabel>
                         <Input type={"email"} placeholder={"Enter your email"} width={"500px"} onChange={handleEmailChange}/>
                     </FormControl>
                     <FormControl id={"password"} isRequired mb={6}>
-                        <FormLabel fontSize={"18px"}>
+                        <FormLabel fontSize={"18px"} color={"white"}>
                             Password
                         </FormLabel>
                         <InputGroup width={"500px"}>
@@ -176,7 +178,7 @@ function Login() {
                     <Button type={"button"} bg={"#4e4e4e"} color={"white"} _hover={{ bg: "#5e5e5e"}} onClick={handleLogin}>
                         Log In
                     </Button>
-                    <Text mt="4" textAlign="center" fontSize="sm" color="#4a5568">
+                    <Text mt="4" textAlign="center" fontSize="sm" color="#7a8598">
                         Don't have an account?{" "}
                         <Button
                           variant="link"
@@ -187,7 +189,7 @@ function Login() {
                             Sign Up
                         </Button>
                     </Text>
-                    <Text mt="4" textAlign="center" fontSize="sm" color="#4a5568">
+                    <Text mt="4" textAlign="center" fontSize="sm" color="#7a8598">
                         Forgotten Password?{" "}
                         <Button
                           variant="link"

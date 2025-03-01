@@ -11,8 +11,15 @@ from sqlalchemy import create_engine
 from mysql.connector import Error
 from logging.config import fileConfig
 
-from ..app.models.user_models import User
-from ..app.models.database import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+try:
+    from app.models.user_models import User
+except ImportError:
+    from ..app.models.user_models import User
+
+try:
+    from app.models.database import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+except ImportError:
+    from ..app.models.database import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
 
 load_dotenv()
 

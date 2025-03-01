@@ -155,19 +155,19 @@ function SignUp() {
                             Sign Up
                     </Heading>
                     <FormControl id={"email"} isRequired>
-                        <FormLabel fontSize={"18px"}>
+                        <FormLabel fontSize={"18px"} color={"white"}>
                             Email
                         </FormLabel>
                         <Input type={"email"} placeholder={"Enter your email"} width={"500px"} onChange={handleEmailChange}/>
                     </FormControl>
                     <FormControl id={"userName"} isRequired>
-                        <FormLabel fontSize={"18px"}>
+                        <FormLabel fontSize={"18px"} color={"white"}>
                             Name
                         </FormLabel>
                         <Input type={"email"} placeholder={"Enter your name"} width={"500px"} onChange={handleNameChange}/>
                     </FormControl>
                     <FormControl id={"password"} isRequired mb={4}>
-                        <FormLabel fontSize={"18px"}>
+                        <FormLabel fontSize={"18px"} color={"white"}>
                             Password
                         </FormLabel>
                         <InputGroup width={"500px"}>
@@ -197,7 +197,7 @@ function SignUp() {
                         </Box>
                     </FormControl>
                     <FormControl id={"confirmPassword"} isRequired mb={6}>
-                        <FormLabel fontSize={"18px"}>
+                        <FormLabel fontSize={"18px"} color={"white"}>
                             Confirm Password
                         </FormLabel>
                         <InputGroup width={"500px"}>
@@ -237,7 +237,7 @@ function SignUp() {
                     <Button type={"submit"} bg={"#4e4e4e"} color={"white"} _hover={{ bg: "#5e5e5e"}} onClick={handleSignUp} disabled={!validPassword || !passwordsMatch}>
                         Sign Up
                     </Button>
-                    <Text mt="4" textAlign="center" fontSize="sm" color="#4a5568">
+                    <Text mt="4" textAlign="center" fontSize="sm" color="#7a8598">
                         Already have an account?{" "}
                         <Button
                           variant="link"

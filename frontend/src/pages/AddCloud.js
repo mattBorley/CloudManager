@@ -7,21 +7,68 @@ import {
     FormControl,
     FormLabel,
     Input,
-    InputGroup,
-    HStack, Select
+    HStack,
+    Select,
+    Text
 } from "@chakra-ui/react";
-import React from "react";
-import {useNavigate} from "react-router-dom";
+import React, {useState} from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import "../styling/addCloud.css";
+
 
 function AddCloud() {
     const navigate = useNavigate()
+    const [selectedCloud, setSelectedCloud] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
+
+    async function dropbox_oauth_logic() {
+        try {
+            const response = await axios.get(
+                "http://localhost:8000/api/dropbox/authorization",
+                {
+                    withCredentials: true
+                }
+            );
+            console.log(response)
+            window.location.href = response.request.responseURL;
+        } catch (error) {
+            console.error("Error initiating Dropbox OAuth: ", error);
+        }
+    }
 
     const toMain = () => {
         navigate("/main")
     }
 
-    const addCloud = () => {
-        navigate("/main")
+    const addCloud = async () => {
+        if (!selectedCloud) {
+            setErrorMessage("No service selected.")
+            return;
+        }
+
+        switch (selectedCloud) {
+            case "google_drive":
+                console.log("Google Drive selected. Proceeding with Google Drive setup...");
+                setErrorMessage("")
+                break;
+            case "onedrive":
+                console.log("OneDrive selected. Proceeding with OneDrive setup...");
+                setErrorMessage("")
+                break;
+            case "dropbox":
+                console.log("Dropbox selected. Proceeding with Dropbox setup...");
+                setErrorMessage("")
+                dropbox_oauth_logic()
+                break;
+            case "AWS":
+                console.log("AWS selected. Proceeding with AWS setup...");
+                setErrorMessage("")
+                break;
+            default:
+                console.log("No service selected");
+                setErrorMessage("No service selected.")
+        }
     }
 
     return (
@@ -56,7 +103,7 @@ function AddCloud() {
                             Add Cloud Service
                     </Heading>
                     <FormControl id={"cloudService"} isRequired>
-                        <FormControl fontSize={"18px"}>
+                        <FormControl fontSize={"18px"} color={"white"}>
                             Select Cloud <span style={{color: "#e74b4b"}}>*</span>
                         </FormControl>
                         <Select
@@ -64,19 +111,26 @@ function AddCloud() {
                             bg={"#4e4e4e"}
                             color={"white"}
                             _hover={{ bg: "#5e5e5e" }}
+                            value={selectedCloud}
+                            onChange={(e) => setSelectedCloud(e.target.value)}
                         >
-                            <option value={"google_drive"}>Google Drive</option>
+                            <option value={"google_drive"} color={"#5e5e5e"}>Google Drive</option>
                             <option value={"onedrive"}>OneDrive</option>
                             <option value={"dropbox"}>Dropbox</option>
                             <option value={"AWS"}>AWS</option>
                         </Select>
                     </FormControl>
                     <FormControl id={"cloudName"} isRequired mb={6}>
-                        <FormLabel fontSize={"18px"}>
+                        <FormLabel fontSize={"18px"} color={"white"}>
                             Cloud Name
                         </FormLabel>
                         <Input placeholder={"Enter the chosen name of this storage cloud"} width={"500px"}/>
                     </FormControl>
+                    {errorMessage && (
+                          <Text color="red.500" mt={0}>
+                            ❌ {errorMessage}
+                          </Text>
+                        )}
                     <HStack
                         w={"100%"}
                         h={"100%"}

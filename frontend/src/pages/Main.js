@@ -13,12 +13,12 @@ function Main() {
     const cloudNames = ["GoogleDrive", "Cloud 2", "DropBox", "Cloud 4"];
 
     const toLogin = () => {
-        // localStorage.removeItem('accessToken')
-        // localStorage.removeItem('refreshToken')
-        //
-        // navigate("/login")
-        if (cloudCount === 0) setCloudCount(11);
-        if (cloudCount === 11) setCloudCount(0);
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+
+        navigate("/login")
+        // if (cloudCount === 0) setCloudCount(11);
+        // if (cloudCount === 11) setCloudCount(0);
     }
 
     const toAddCloud = () => {
@@ -115,7 +115,7 @@ function Main() {
                                             justifyContent={"center"}
                                             mb={1}
                                         >
-                                            <Heading as="h2" size="md">
+                                            <Heading as="h2" size="md" color={"white"}>
                                                 Cloud Services
                                             </Heading>
                                         </Box>
@@ -128,6 +128,7 @@ function Main() {
                                                 borderRadius="md"
                                                 _hover={{ bg: "#1e1e1e" }}
                                                 onClick={toAddCloud}
+                                                color={"white"}
                                             >
                                                 Add Cloud
                                             </Button>
@@ -195,6 +196,7 @@ function Main() {
                                     borderRadius="md"
                                     _hover={{ bg: "#5e5e5e" }}
                                     onClick={toLogin}
+                                    color={"white"}
                                 >
                                     Log Out
                                 </Button>

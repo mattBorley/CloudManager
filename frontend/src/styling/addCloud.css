@@ -1,0 +1,23 @@
+/* General styling for the select dropdown */
+select {
+    background-color: #4e4e4e;
+    color: white;
+    border: 1px solid #5e5e5e;
+    cursor: pointer;
+}
+
+/* Styling for options inside the select dropdown */
+option {
+    background-color: #3e3e3e;
+    color: white;
+}
+
+/* Styling when an option is hovered */
+option:hover {
+    background-color: #5e5e5e;
+}
+
+/* Ensure the dropdown text remains visible */
+select:focus {
+    outline: none;
+}

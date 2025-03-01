@@ -3,26 +3,31 @@
   font-weight: bold;
   margin-bottom: 24px;
   text-decoration: underline;
+  color: white;
 }
 
 .row {
   display: flex;
   margin-bottom: 20px;
   font-size: 18px;
+  color: white;
 }
 
 .row p {
   width: 50%;
   margin: 0;
+  color: white;
 }
 
 .row p.label {
   width: 60%;
   font-weight: bold;
+  color: white;
 
 }
 
 .row p.value {
   width: 40%;
   text-align: right;
+  color: white;
 }
