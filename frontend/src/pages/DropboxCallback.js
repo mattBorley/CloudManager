@@ -36,15 +36,11 @@ const DropboxCallback = () => {
 
       const accessToken = localStorage.getItem("accessToken")
       try {
-        const response = await axios.get("http://localhost:8000/api/dropbox/callback", {
+        await axios.get("http://localhost:8000/api/dropbox/callback", {
           params: { code, state, cloud_name: cloudName },
           headers: { Authorization: `Bearer ${accessToken}` },
           withCredentials: true,
         });
-
-        console.log("Dropbox OAuth Success:", response.data);
-
-        localStorage.setItem("cloudData", response.data.cloud_data)
 
         navigate("/main");
       } catch (error) {
@@ -54,7 +50,7 @@ const DropboxCallback = () => {
     };
 
     handleCallback();
-  }, [searchParams, navigate, setCloudData]);
+  }, [searchParams, navigate]);
 
   return (
     <Card

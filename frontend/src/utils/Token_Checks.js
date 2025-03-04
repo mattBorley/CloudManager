@@ -1,7 +1,9 @@
 import axios from "axios";
 
 export const getAccessToken = () => {
-    return localStorage.getItem('accessToken');
+    const accessToken = localStorage.getItem('accessToken');
+    console.log(`Access Token from getAccessToken: ${accessToken}`);
+    return accessToken;
 }
 
 const decodeJWT = (token) => {

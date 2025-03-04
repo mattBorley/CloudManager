@@ -32,6 +32,11 @@ try:
 except ImportError:
     from routers.google import router as googleRouter
 
+try:
+    from app.routers.get_data import router as dataRouter
+except ImportError:
+    from routers.get_data import router as dataRouter
+
 app = FastAPI()
 
 
@@ -54,6 +59,7 @@ app.include_router(usersRouter, prefix="/api/users", tags=["users"])
 app.include_router(tokensRouter, prefix="/api/tokens", tags=["tokens"])
 app.include_router(dropboxRouter, prefix="/api/dropbox", tags=["dropbox"])
 app.include_router(googleRouter, prefix="/api/google", tags=["google"])
+app.include_router(dataRouter, prefix="/api/data", tags=["data"])
 
 
 # app.middleware("http")

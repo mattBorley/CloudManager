@@ -5,7 +5,11 @@ import { getAccessToken, isTokenExpired, refreshAccessToken} from "../utils/Toke
 axios.interceptors.request.use(
     async (config) => {
         let accessToken = getAccessToken()
-        if (!accessToken) return config;
+        console.log(`Access Token in Axios Intercept: ${accessToken}`);
+        if (!accessToken) {
+            console.log("Access token not found somehow.");
+            return config;
+        };
 
         const isExpired = isTokenExpired(accessToken)
         if (isExpired) {

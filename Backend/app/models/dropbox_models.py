@@ -8,6 +8,7 @@ import dropbox
 import httpx
 import requests
 
+from .dropbox_database import get_dropbox_accounts
 from .user_models import get_user_id
 
 try:
@@ -96,6 +97,21 @@ class DropboxClass(OAuthBase):
             if response.status_code != 200:
                 raise Exception(f"Failed to refresh token: {response.text}")
             return response.json().get("access_token")
+
+    async def get_dropbox_data(self, local_user_id):
+        dropbox_clouds = []
+        accounts = get_dropbox_accounts(local_user_id)
+        for account in accounts:
+            access_token = await DropboxClass.refresh_access_token(self, account.get('refresh_token'))
+            data = await get_data_for_list(access_token)
+            dropbox_data = {
+                "cloud_name": account.get("name") + " (Dropbox)",
+                "cloud_data": data
+            }
+            print(dropbox_data)
+            dropbox_clouds.append(dropbox_data)
+        return dropbox_clouds
+
 
 async def store_credentials(local_access_token: str, refresh_token: str, user_id: str, cloud_name: str):
     """
@@ -229,3 +245,5 @@ async def get_data_for_list(access_token: str) -> dict:
 
     except Exception as e:
         raise Exception(f"Error fetching data: {str(e)}")
+
+

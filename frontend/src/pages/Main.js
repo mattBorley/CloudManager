@@ -2,17 +2,16 @@ import '../styling/Main.css';
 import '../styling/tabs.css';
 import { Button, Heading, Card, Flex, VStack, Box, HStack } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 
 import TabsComponent from "../components/Tabs";
 import CloudList from "../components/CloudList";
+import axios from "axios";
+import {getAccessToken} from "../utils/Token_Checks";
 
 function Main() {
     const navigate = useNavigate();
-
-    const cloudData = localStorage.getItem("cloudStorage")
-    localStorage.removeItem("cloudStorage")
-    console.log(cloudData)
+    const [clouds, setClouds] = useState([]);
 
     const toLogin = () => {
         localStorage.removeItem('accessToken');
@@ -23,6 +22,26 @@ function Main() {
     const toAddCloud = () => {
         navigate("/addcloud");
     }
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await axios.get("http://localhost:8000/api/data/get_data", {
+                    withCredentials: true,
+                    headers: {
+                        'Authorization': `Bearer ${getAccessToken()}`,
+                    }
+                });
+                setClouds(prevClouds => [...prevClouds, ...response.data]);
+                console.log(response.data)
+            } catch (error) {
+                console.error("Error fetching cloud data:", error);
+            }
+        };
+
+        fetchData();
+    }, []);
+
 
     return (
         <Card
@@ -116,7 +135,7 @@ function Main() {
                                                 bg="#2e2e2e"
                                                 size="sm"
                                                 borderRadius="md"
-                                                _hover={{ bg: "#1e1e1e" }}
+                                                _hover={{bg: "#1e1e1e"}}
                                                 onClick={toAddCloud}
                                                 color={"white"}
                                             >
@@ -124,7 +143,7 @@ function Main() {
                                             </Button>
                                         </Box>
                                     </Flex>
-                                    <CloudList cloudList={cloudData.map((cloudService) => cloudService.cloud_name)}/>
+                                    <CloudList cloudList={clouds.map(cloud => cloud.cloud_name) || []}/>
                                 </VStack>
                             </Box>
                             <Box ml={"auto"}>
@@ -132,7 +151,7 @@ function Main() {
                                     bg="#4e4e4e"
                                     size="sm"
                                     borderRadius="md"
-                                    _hover={{ bg: "#5e5e5e" }}
+                                    _hover={{bg: "#5e5e5e"}}
                                     onClick={toLogin}
                                     color={"white"}
                                 >
@@ -153,7 +172,7 @@ function Main() {
                     alignItems={"center"}
                     flexDir="column"
                 >
-                    <TabsComponent cloudData={cloudData}/>
+                    <TabsComponent cloudData={clouds}/>
                 </Box>
             </HStack>
         </Card>

@@ -1,31 +1,38 @@
-// Original flat data structure
-const data = [
-  { name: 'Group A', value: 400 },
-  { name: 'Group B', value: 300 },
-  { name: 'Group C', value: 300 },
-  { name: 'Group D', value: 200 },
-  { name: 'Group E', value: 20 },
-  { name: 'Group F', value: 100 },
-  { name: 'Group D', value: 500 },
-];
+import React, { createContext, useContext, useMemo } from "react";
 
+const GraphDataContext = createContext();
 
+const processStorageData = (storage) => {
+    if (!storage || storage.used_storage === undefined || storage.total_storage === undefined) {
+        return { sortedData: [], minValue: 0, maxValue: 0 }; // Return default values if storage is invalid
+    }
 
-const hierarchicalData = [
-  {
-    name: 'Category 1',
-    children: data,
-  },
-];
+    const { used_storage, total_storage, remaining_storage } = storage;
 
-export const sortDataByValue = (data) => {
-  const minValue = Math.min(...data.map(d => d.value));
-  const maxValue = Math.max(...data.map(d => d.value));
+    const availableStorage = remaining_storage !== undefined ? remaining_storage : total_storage - used_storage;
 
-  const sortedData = [...data].sort((a, b) => b.value - a.value);
+    const data = [
+        { name: "Used Storage", value: used_storage },
+        { name: "Available Storage", value: availableStorage },
+    ];
 
-  return { sortedData, minValue, maxValue };
+    const sortedData = [...data].sort((a, b) => b.value - a.value);
+
+    return {
+        sortedData,
+        minValue: Math.min(used_storage, availableStorage),
+        maxValue: total_storage,
+    };
 };
 
-// Export both `data` and `hierarchicalData`
-export { data, hierarchicalData };
+export const GraphDataProvider = ({ cloudData, children }) => {
+    const processedData = useMemo(() => processStorageData(cloudData), [cloudData]);
+
+    return (
+        <GraphDataContext.Provider value={processedData}>
+            {children}
+        </GraphDataContext.Provider>
+    );
+};
+
+export const useGraphData = () => useContext(GraphDataContext);

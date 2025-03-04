@@ -4,7 +4,6 @@ DropBox endpoints
 import logging
 import os
 
-from dropbox.users import get_account
 from fastapi import Request, APIRouter, HTTPException, Header
 from starlette.responses import JSONResponse
 
@@ -17,7 +16,7 @@ except ImportError:
     from ..utils.header_validation import check_header
 
 try:
-    from app.models.dropbox_models import DropboxOAuthClass
+    from app.models.dropbox_models import DropboxOAuthClass, store_credentials, get_data_for_list
 except ImportError:
     from ..models.dropbox_models import DropboxClass, store_credentials, get_data_for_list
 
@@ -102,26 +101,25 @@ async def dropbox_callback(
             raise HTTPException(status_code=400, detail="Missing user id")
 
         await store_credentials(local_access_token, refresh_token, user_id, cloud_name)
-        dropbox_data = await get_data_for_list(access_token)
+        # dropbox_data = await get_data_for_list(access_token)
 
         return JSONResponse(status_code=200, content={
-            "cloud_name": cloud_name,
-            "cloud_data": dropbox_data,
+            "Success": True,
         })
     except Exception as e:
         logging.error(f"OAuth error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"OAuth error: {str(e)}")
 
-@router.get("/refreshatlogin")
-async def dropbox_refresh(request: Request):
-    local_access_token = check_header(request.headers.get("Authorization"))
-    payload = get_data_for_list(local_access_token)
-    user_email = payload.get("sub")
-    local_user_id = get_user_id(user_email)
-    dropbox_accounts = get_dropbox_accounts(local_user_id)
-    return JSONResponse(status_code=200, content={"dropbox_accounts": dropbox_accounts})
-
-@router.get("/getdatapostlogin")
-async def dropbox_get_data_post_login(request: Request):
-    access_token = await dropbox_class.refresh_access_token(request.get("refresh_token"))
-    list_data = get_data_for_list(access_token)
+# @router.get("/refreshatlogin")
+# async def dropbox_refresh(request: Request):
+#     local_access_token = check_header(request.headers.get("Authorization"))
+#     payload = get_data_for_list(local_access_token)
+#     user_email = payload.get("sub")
+#     local_user_id = get_user_id(user_email)
+#     dropbox_accounts = get_dropbox_accounts(local_user_id)
+#     return JSONResponse(status_code=200, content={"dropbox_accounts": dropbox_accounts})
+#
+# @router.get("/getdatapostlogin")
+# async def dropbox_get_data_post_login(request: Request):
+#     access_token = await dropbox_class.refresh_access_token(request.get("refresh_token"))
+#     list_data = get_data_for_list(access_token)
