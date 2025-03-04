@@ -33,6 +33,7 @@ def create_refresh_token(data: dict):
     return encoded_jwt
 
 def get_payload_from_access(access_token):
+    """Decodes JWT access token to payload."""
     return jwt.decode(access_token, ACCESS_KEY, algorithms=[ALGORITHM])
 
 def get_payload_from_refresh(refresh_token):

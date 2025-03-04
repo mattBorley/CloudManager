@@ -32,8 +32,8 @@ async def signup(request: SignUpRequest):
 
     hashed_password = hash_password(password)
 
-
-    if not store_user_in_database(email, name, hashed_password):
+    check = store_user_in_database(email, name, hashed_password)
+    if not check:
         raise HTTPException(status_code=400, detail="Error storing user in database")
 
     access_token = create_access_token(data={"sub": email})
@@ -56,8 +56,8 @@ async def login(request: LoginRequest):
     email = request.email
     password = request.password
 
-    # Verify login with the modified function
-    if not verify_login(email, password):
+    check = verify_login(email, password)
+    if not check:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # If login is successful, create access tokens

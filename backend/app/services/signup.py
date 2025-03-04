@@ -39,8 +39,20 @@ async def store_user_in_database(email, name, hashed_password):
         )
         connection.commit()
 
-        logging.info(f"User with email {email} successfully registered.")
-        return True
+        # Log after insertion to verify if the entry is successfully added
+        logging.info(f"User with email {email} inserted into the database. Verifying insertion.")
+
+        # Verifying the insertion by querying the users table again
+        cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
+        inserted_user = cursor.fetchone()
+
+        if inserted_user:
+            logging.info(f"User with email {email} successfully registered and verified.")
+            return True
+        else:
+            logging.error(f"User with email {email} was not found in the database after insertion.")
+            raise HTTPException(status_code=500, detail="User insertion failed")
+
     except mysql.connector.Error as e:
         # Log the error message
         logging.error(f"Database error: {e}")
@@ -50,4 +62,3 @@ async def store_user_in_database(email, name, hashed_password):
         cursor.close()
         connection.close()
         logging.info("Database connection closed.")
-

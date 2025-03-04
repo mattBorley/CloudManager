@@ -2,6 +2,7 @@
 Model for Dropbox OAuth
 """
 import logging
+from fastapi import HTTPException
 from urllib.parse import urlparse, parse_qsl, urlencode
 import dropbox
 import httpx
@@ -20,9 +21,9 @@ except ImportError:
     from ..models.oauth import OAuthBase
 
 try:
-    from app.utils.token_generation import generate_csrf_token, get_payload_from_refresh, get_payload_from_access
+    from app.utils.token_generation import generate_csrf_token, get_payload_from_access
 except ImportError:
-    from ..utils.token_generation import generate_csrf_token, get_payload_from_refresh, get_payload_from_access
+    from ..utils.token_generation import generate_csrf_token, get_payload_from_access
 
 
 class DropboxClass(OAuthBase):
@@ -101,9 +102,13 @@ async def store_credentials(local_access_token: str, refresh_token: str, user_id
     Adds Dropbox account to the database and logs key actions.
     """
     try:
-        logging.info(f"Storing credentials for cloud: {cloud_name}, user_id: {user_id}")
+        # Check if user_id or cloud_name is None and log a warning if so
+        if not user_id:
+            logging.warning("user_id is None or empty.")
+        if not cloud_name:
+            logging.warning("cloud_name is None or empty.")
 
-        logging.debug(f"Extracting payload from access token: {local_access_token[:10]}...")  # Masking token for privacy
+
         payload = get_payload_from_access(local_access_token)
 
         user_email = payload.get("email")
@@ -114,12 +119,20 @@ async def store_credentials(local_access_token: str, refresh_token: str, user_id
         logging.info(f"Retrieved local user ID: {local_user_id}")
 
         logging.debug(f"Inserting data into Dropbox table for user_id: {local_user_id}")
+        if not local_user_id:
+            raise HTTPException(status_code=400, detail="Missing local_user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="Missing user_id")
+        if not refresh_token:
+            raise HTTPException(status_code=400, detail="Missing refresh_token")
+        if not cloud_name:
+            raise HTTPException(status_code=400, detail="Missing cloud_name")
         insert_into_dropbox_table(local_user_id, user_id, refresh_token, cloud_name)
         logging.info(f"Credentials for user {local_user_id} successfully stored in {cloud_name}.")
 
     except Exception as e:
         logging.error(f"Error storing credentials for user {user_id} in cloud {cloud_name}: {str(e)}")
-        raise
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 async def get_data_for_list(access_token: str) -> dict:

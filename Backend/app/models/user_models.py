@@ -51,11 +51,12 @@ class LoginRequest(BaseModel):
 
 
 def get_user_id(email):
+    logging.info("Email: " + email)
     try:
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
 
-        cursor.execute(f"SELECT * FROM users WHERE email='{email}'")
+        cursor.execute(f"SELECT id FROM users WHERE email='{email}'")
         user = cursor.fetchone()
 
         if not user:
@@ -65,7 +66,7 @@ def get_user_id(email):
 
         return local_user_id
     except Error as e:
-        logging.error(f"Couldn'd get user id: {e}")
+        logging.error(f"Couldn't get user id: {e}")
         raise HTTPException(status_code=500, detail=f"Database connection error: {e}")
     finally:
         if cursor:

@@ -15,6 +15,7 @@ import {
 import {useNavigate} from "react-router-dom";
 import axios from "axios";
 import "../styling/addCloud.css";
+import {useGoogleLogin} from "@react-oauth/google";
 
 function AddCloud() {
   const navigate = useNavigate();
@@ -39,6 +40,22 @@ function AddCloud() {
     }
   }
 
+  const google_oauth_logic = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const response = await axios.post("http://localhost:8000/api/google/callback", {
+          token: tokenResponse.access_token,
+        });
+        console.log("User Data:", response.data);
+      } catch (error) {
+        console.error("Error logging in:", error);
+      }
+    },
+    onError: () => console.error("Login Failed"),
+    scope: "https://www.googleapis.com/auth/drive.metadata.readonly email profile",
+  });
+
+
   const toMain = () => {
     navigate("/main");
   };
@@ -53,6 +70,7 @@ function AddCloud() {
       case "google_drive":
         console.log("Google Drive selected. Proceeding with Google Drive setup...");
         setErrorMessage("");
+        google_oauth_logic()
         break;
       case "onedrive":
         console.log("OneDrive selected. Proceeding with OneDrive setup...");

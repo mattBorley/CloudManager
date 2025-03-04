@@ -3,7 +3,6 @@ Main file
 """
 import os
 
-import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -12,7 +11,6 @@ try:
     from app.utils.token_generation import generate_session_key
 except ImportError:
     from utils.token_generation import generate_session_key
-
 
 try:
     from app.routers.users import router as usersRouter
@@ -29,10 +27,12 @@ try:
 except ImportError:
     from routers.dropbox import router as dropboxRouter
 
-app = FastAPI()
+try:
+    from app.routers.google import router as googleRouter
+except ImportError:
+    from routers.google import router as googleRouter
 
-# if __name__ == "__main__":
-#     uvicorn.run(app, host="0.0.0.0", port=8000, ssl_certfile="/etc/ssl/certs/server.crt", ssl_keyfile="/etc/ssl/private/server.key")
+app = FastAPI()
 
 
 app.add_middleware(
@@ -53,6 +53,7 @@ app.add_middleware(
 app.include_router(usersRouter, prefix="/api/users", tags=["users"])
 app.include_router(tokensRouter, prefix="/api/tokens", tags=["tokens"])
 app.include_router(dropboxRouter, prefix="/api/dropbox", tags=["dropbox"])
+app.include_router(googleRouter, prefix="/api/google", tags=["google"])
 
 
 # app.middleware("http")
