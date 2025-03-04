@@ -102,23 +102,11 @@ async def store_credentials(local_access_token: str, refresh_token: str, user_id
     Adds Dropbox account to the database and logs key actions.
     """
     try:
-        # Check if user_id or cloud_name is None and log a warning if so
-        if not user_id:
-            logging.warning("user_id is None or empty.")
-        if not cloud_name:
-            logging.warning("cloud_name is None or empty.")
-
-
         payload = get_payload_from_access(local_access_token)
+        user_email = payload.get("sub")
 
-        user_email = payload.get("email")
-        logging.info(f"Extracted email: {user_email}")
-
-        logging.debug(f"Getting user ID for email: {user_email}")
         local_user_id = get_user_id(user_email)
-        logging.info(f"Retrieved local user ID: {local_user_id}")
 
-        logging.debug(f"Inserting data into Dropbox table for user_id: {local_user_id}")
         if not local_user_id:
             raise HTTPException(status_code=400, detail="Missing local_user_id")
         if not user_id:
@@ -128,12 +116,10 @@ async def store_credentials(local_access_token: str, refresh_token: str, user_id
         if not cloud_name:
             raise HTTPException(status_code=400, detail="Missing cloud_name")
         insert_into_dropbox_table(local_user_id, user_id, refresh_token, cloud_name)
-        logging.info(f"Credentials for user {local_user_id} successfully stored in {cloud_name}.")
 
     except Exception as e:
         logging.error(f"Error storing credentials for user {user_id} in cloud {cloud_name}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 async def get_data_for_list(access_token: str) -> dict:
     """
@@ -146,122 +132,72 @@ async def get_data_for_list(access_token: str) -> dict:
 
     headers = {
         "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json",
     }
 
     try:
-        # Fetch Space Usage Info
-        logging.info("Fetching space usage data from Dropbox...")
-        response = requests.post(space_usage_url, headers=headers)
+        space_usage_response = requests.post(space_usage_url, headers=headers)
 
-        # Log the raw response for debugging
-        logging.debug(f"Raw response from Dropbox (space usage): {response.text}")
+        if not space_usage_response.text.strip():
+            raise Exception("Received empty or None response for space usage data")
 
-        # Check if the response body is empty
-        if not response.text.strip():
-            logging.error(f"Received empty response for space usage data")
-            raise Exception("Received empty response for space usage data")
-
-        # Check for valid JSON
-        if response.status_code != 200:
-            logging.error(f"Error fetching storage data: {response.text}")
-            raise Exception(f"Failed to fetch storage data from Dropbox: {response.text}")
+        if space_usage_response.status_code != 200:
+            raise Exception(f"Failed to fetch storage data from Dropbox: {space_usage_response.text}")
 
         try:
-            storage_data = response.json()
+            storage_data = space_usage_response.json()
+            if not storage_data:
+                raise ValueError("No data in response for space usage.")
         except ValueError as e:
-            logging.error(f"Error parsing JSON response for space usage: {str(e)}")
-            logging.debug(f"Response content: {response.text}")
             raise Exception("Failed to parse storage data from Dropbox.")
 
-        used_storage = storage_data['used']
-        total_storage = storage_data['allocation']['allocated']
+        used_storage = storage_data.get('used', 0)
+        total_storage = storage_data.get('allocation', {}).get('allocated', 0)
         remaining_storage = total_storage - used_storage
-
-        logging.info(
-            f"Storage data fetched successfully: Used {used_storage}, Total {total_storage}, Remaining {remaining_storage}")
 
         file_count = 0
         largest_file = None
         largest_file_size = 0
         oldest_file = None
         oldest_file_time = None
-        largest_folder = None
-        largest_folder_size = 0
         duplicates = {}
 
-        file_metadata = []
-        logging.info("Fetching file metadata from Dropbox...")
-        response = requests.post(list_folder_url, headers=headers, json={"path": "", "recursive": True})
+        file_metadata_response = requests.post(list_folder_url, headers=headers, json={"path": "", "recursive": True})
 
-        # Log the raw response for debugging
-        logging.debug(f"Raw response from Dropbox (file metadata): {response.text}")
+        if not file_metadata_response.text.strip():
+            raise Exception("Received empty or None response for file metadata")
 
-        # Check if the response body is empty
-        if not response.text.strip():
-            logging.error(f"Received empty response for file metadata")
-            raise Exception("Received empty response for file metadata")
-
-        # Check for valid JSON
-        if response.status_code != 200:
-            logging.error(f"Error fetching file metadata: {response.text}")
-            raise Exception(f"Failed to fetch file metadata from Dropbox: {response.text}")
+        if file_metadata_response.status_code != 200:
+            raise Exception(f"Failed to fetch file metadata from Dropbox: {file_metadata_response.text}")
 
         try:
-            files = response.json()['entries']
+            files = [entry for entry in file_metadata_response.json().get('entries', []) if entry.get('.tag') == 'file']
         except ValueError as e:
-            logging.error(f"Error parsing JSON response for file metadata: {str(e)}")
-            logging.debug(f"Response content: {response.text}")
             raise Exception("Failed to parse file metadata from Dropbox.")
 
-        for entry in files:
-            if entry['.tag'] == 'file':
-                file_count += 1
-                file_size = entry['size']
-                file_name = entry['name']
-                client_modified = entry['client_modified']
+        if files:
+            for entry in files:
+                file_name = entry.get('name', '')
+                file_size = entry.get('size', 0)
+                client_modified = entry.get('client_modified', '')
 
-                # Largest File
+                file_count += 1
+
                 if file_size > largest_file_size:
                     largest_file = entry
                     largest_file_size = file_size
-                    logging.debug(f"Found new largest file: {file_name} with size {file_size}")
 
-                # Oldest File
                 if not oldest_file_time or client_modified < oldest_file_time:
                     oldest_file = entry
                     oldest_file_time = client_modified
-                    logging.debug(f"Found new oldest file: {file_name} with modified time {client_modified}")
 
-                # Duplicates
                 if file_name in duplicates:
                     duplicates[file_name].append(entry)
-                    logging.debug(f"Duplicate found: {file_name}")
                 else:
                     duplicates[file_name] = [entry]
 
-            elif entry['.tag'] == 'folder':
-                folder_size = 0
-                for file in files:
-                    if file['.tag'] == 'file' and file['path_display'].startswith(entry['path_display']):
-                        folder_size += file['size']
+        duplicate_count = sum(len(duplicate_files) for duplicate_files in duplicates.values() if len(duplicate_files) > 1)
+        storage_used_by_duplicates = sum(file.get('size', 0) for duplicate_files in duplicates.values() if len(duplicate_files) > 1 for file in duplicate_files)
 
-                # Largest Folder
-                if folder_size > largest_folder_size:
-                    largest_folder = entry
-                    largest_folder_size = folder_size
-                    logging.debug(f"Found new largest folder: {entry['name']} with size {folder_size}")
-
-        # Duplicates Handling
-        duplicate_count = sum(
-            len(duplicate_files) for duplicate_files in duplicates.values() if len(duplicate_files) > 1)
-        storage_used_by_duplicates = sum(
-            file['size'] for duplicate_files in duplicates.values() if len(duplicate_files) > 1 for file in
-            duplicate_files)
-
-        logging.info(f"Found {duplicate_count} duplicate files using {storage_used_by_duplicates} bytes of storage.")
-
-        # Compiling the Data
         data = {
             "storage": {
                 "used_storage": used_storage,
@@ -271,21 +207,14 @@ async def get_data_for_list(access_token: str) -> dict:
             "file_metadata": {
                 "file_count": file_count,
                 "largest_file": {
-                    "name": largest_file['name'],
-                    "size": largest_file_size,
-                    "path": largest_file['path_display']
+                    "name": largest_file.get('name', 'N/A') if largest_file else 'N/A',
+                    "size": largest_file_size if largest_file else 0,
+                    "path": largest_file.get('path_display', 'N/A') if largest_file else 'N/A'
                 },
                 "oldest_file": {
-                    "name": oldest_file['name'],
-                    "modified": oldest_file_time,
-                    "path": oldest_file['path_display']
-                }
-            },
-            "folder_metadata": {
-                "largest_folder": {
-                    "name": largest_folder['name'],
-                    "size": largest_folder_size,
-                    "path": largest_folder['path_display']
+                    "name": oldest_file.get('name', 'N/A') if oldest_file else 'N/A',
+                    "modified": oldest_file_time if oldest_file else 'N/A',
+                    "path": oldest_file.get('path_display', 'N/A') if oldest_file else 'N/A'
                 }
             },
             "duplicates": {
@@ -293,13 +222,10 @@ async def get_data_for_list(access_token: str) -> dict:
                 "storage_used_by_duplicates": storage_used_by_duplicates
             },
             "sync_info": {
-                "last_synced": oldest_file_time
+                "last_synced": oldest_file_time if oldest_file else 'N/A'
             }
         }
-
-        logging.info("Data compiled successfully. Returning the data.")
         return data
 
     except Exception as e:
-        logging.error(f"Error while fetching Dropbox data: {str(e)}")
         raise Exception(f"Error fetching data: {str(e)}")
