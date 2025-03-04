@@ -75,6 +75,18 @@ function Login() {
                     setErrorMessage(typeof data.detail === 'string' ? data.detail : 'Error connecting to the server 2.');
                 }
             } catch (error) {
+                if (error.response) {
+                    // Server responded with a status outside the 2xx range
+                    console.error('Response Error:', error.response);
+                    console.error('Status Code:', error.response.status);
+                    console.error('Response Data:', error.response.data);
+                } else if (error.request) {
+                    // The request was made but no response was received
+                    console.error('Request Error:', error.request);
+                } else {
+                    // Something else went wrong
+                    console.error('Axios Error:', error.message);
+  }
                 setErrorMessage('Error connecting to the server.');
             }
         }

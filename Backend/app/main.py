@@ -31,8 +31,8 @@ except ImportError:
 
 app = FastAPI()
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, ssl_certfile="/etc/ssl/certs/server.crt", ssl_keyfile="/etc/ssl/private/server.key")
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="0.0.0.0", port=8000, ssl_certfile="/etc/ssl/certs/server.crt", ssl_keyfile="/etc/ssl/private/server.key")
 
 
 app.add_middleware(

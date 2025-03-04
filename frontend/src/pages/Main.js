@@ -1,36 +1,26 @@
 import '../styling/Main.css';
 import '../styling/tabs.css';
-import {Button, Heading, Card, Flex, VStack, Box, HStack} from "@chakra-ui/react";
-import {useNavigate} from "react-router-dom";
-import React, {useState} from "react";
+import { Button, Heading, Card, Flex, VStack, Box, HStack } from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
 
 import TabsComponent from "../components/Tabs";
+import CloudList from "../components/CloudList";
+import { useCloud } from "../utils/Cloud_Context";
 
 function Main() {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
-    const [cloudCount, setCloudCount] = useState(0);
-    const cloudNames = ["GoogleDrive", "Cloud 2", "DropBox", "Cloud 4"];
+    const { cloudData, addCloudService } = useCloud();
 
     const toLogin = () => {
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-
-        navigate("/login")
-        // if (cloudCount === 0) setCloudCount(11);
-        // if (cloudCount === 11) setCloudCount(0);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        navigate("/login");
     }
 
     const toAddCloud = () => {
-        navigate("/addcloud")
-    }
-
-    const handleAddButton = () => {
-        setCloudCount(cloudCount + 1);
-    }
-
-    const handleRemoveButton = () => {
-        if (cloudCount > 0) setCloudCount(cloudCount - 1);
+        navigate("/addcloud");
     }
 
     return (
@@ -41,7 +31,7 @@ function Main() {
             w={"100%"}
             overflow={"auto"}
             p={4}
-            display = "flex"
+            display="flex"
             alignItems={"center"}
             borderRadius={"0"}
         >
@@ -97,7 +87,6 @@ function Main() {
                                 justifyContent={"flex-start"}
                                 flexDir={"column"}
                                 pb={3}
-
                             >
                                 <VStack
                                     spacing={2}
@@ -134,62 +123,10 @@ function Main() {
                                             </Button>
                                         </Box>
                                     </Flex>
-                                    <Box
-                                        name={"Clouds"}
-                                        w={"100%"}
-                                        maxH={"400px"}
-                                        alignItems={"center"}
-                                        overflowY={"auto"}
-                                    >
-                                        <VStack
-                                            spacing={2}
-                                            align={"center"}
-                                            width={"100%"}
-                                        >
-                                            {cloudCount === 0 ? (
-                                                <Box
-                                                    bg={"#4e4e4e"}
-                                                    width={"95.5%"}
-                                                    height={"50px"}
-                                                    display={"flex"}
-                                                    alignItems={"center"}
-                                                    justifyContent={"center"}
-                                                    borderColor={"#2e2e2e"}
-                                                    borderWidth={2}
-                                                    borderRadius={5}
-                                                    ml={2}
-                                                    mr={2}
-                                                >
-                                                    <Heading as="h4" size="sm" color="#fff" fontWeight={"semibold"}>
-                                                        No Clouds Connected
-                                                    </Heading>
-                                                </Box>
-                                            ) : (
-                                                Array.from({ length: cloudCount }).map((_, index) =>(
-                                                    <Button
-
-                                                        key={index}
-                                                        bg={"#2e2e2e"}
-                                                        width={"95.5%"}
-                                                        height={"50px"}
-                                                        shadow={"lg"}
-                                                        ml={2}
-                                                        mr={2}
-                                                        fontWeight={"semibold"}
-                                                        as={"h4"}
-
-                                                    >
-                                                        {cloudNames[index]}
-                                                    </Button>
-                                                ))
-                                            )}
-                                        </VStack>
-                                    </Box>
+                                    <CloudList cloudList={cloudData.map((cloudService) => cloudService.cloud_name)}/>
                                 </VStack>
                             </Box>
-                            <Box
-                                ml={"auto"}
-                            >
+                            <Box ml={"auto"}>
                                 <Button
                                     bg="#4e4e4e"
                                     size="sm"
@@ -215,7 +152,7 @@ function Main() {
                     alignItems={"center"}
                     flexDir="column"
                 >
-                    <TabsComponent/>
+                    <TabsComponent cloudData={cloudData}/>
                 </Box>
             </HStack>
         </Card>

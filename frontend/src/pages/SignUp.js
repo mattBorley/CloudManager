@@ -24,7 +24,7 @@ function SignUp() {
             email,
             name,
             password,
-            confirmPassword
+            confirm_password: confirmPassword
         };
 
         try {
@@ -32,20 +32,24 @@ function SignUp() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                withCredentials: true,
             });
 
-            // Log the status code and status text for debugging
             console.log("Response Status:", accessResponse.status);
             console.log("Response Status Text:", accessResponse.statusText);
 
             const data = accessResponse.data;
 
+            console.log("Response Data: ", data)
+
             if (accessResponse.status === 200 && data.success) {
 
-                const { accessToken, refreshToken } = data;
+                const { access_token, refresh_token } = data;
 
-                localStorage.setItem('accessToken', accessToken);
-                localStorage.setItem('refreshToken', refreshToken);
+                localStorage.setItem('accessToken', access_token);
+                console.log("Access token: " + access_token)
+                localStorage.setItem('refreshToken', refresh_token);
+                console.log("Refresh token: " + refresh_token)
 
                 const csrfResponse = await axios.get(
                     "api/tokens/get_csrf_token",

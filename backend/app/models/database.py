@@ -37,3 +37,4 @@ def get_db_connection():
         return connection
     except Error as e:
         raise HTTPException(status_code=500, detail=f"Database connection error: {e}")
+

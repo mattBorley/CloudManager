@@ -3,13 +3,18 @@ DropBox endpoints
 """
 import logging
 import os
-from fastapi import Request, APIRouter, HTTPException
-from starlette.responses import RedirectResponse, JSONResponse
+from fastapi import Request, APIRouter, HTTPException, Header
+from starlette.responses import JSONResponse
+
+try:
+    from app.utils.header_validation import check_header
+except ImportError:
+    from ..utils.header_validation import check_header
 
 try:
     from app.models.dropbox_models import DropboxOAuthClass
 except ImportError:
-    from ..models.dropbox_models import DropboxOAuthClass
+    from ..models.dropbox_models import DropboxClass, store_credentials, get_data_for_list
 
 try:
     from app.utils.token_generation import generate_csrf_token
@@ -26,9 +31,9 @@ router = APIRouter()
 
 key = os.getenv("DROPBOX_APP_KEY")
 secret = os.getenv("DROPBOX_APP_SECRET")
-redirect_uri = os.getenv("REDIRECT_URI")
+redirect_uri = os.getenv("DROPBOX_REDIRECTURL")
 
-dropbox_oauth = DropboxOAuthClass(
+dropbox_class = DropboxClass(
     key=key,
     secret=secret,
     redirect_uri=redirect_uri
@@ -43,34 +48,50 @@ async def dropbox_authorization(request: Request):
         logging.info("Stared dropbox Oauth")
         csrf_token = generate_csrf_token()
         request.session["csrf_token"] = csrf_token
-        auth_url = dropbox_oauth.get_authorization_url(session=request.session, csrf_token=csrf_token)
+        auth_url = dropbox_class.get_authorization_url(session=request.session, csrf_token=csrf_token)
 
-        return RedirectResponse(auth_url)
+        return {
+            "message": "Auth URL obtained",
+            "success": True,
+            "auth_url": auth_url,
+        }
     except Exception as e:
         logging.error(f"Dropbox OAuth Error: {str(e)}")
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @router.get("/callback")
-async def dropbox_callback(request: Request):
+async def dropbox_callback(
+    request: Request,
+):
     """
     Handle Dropbox OAuth Callback with CSRF validation
     """
     try:
-        validate_csrf_token(request)
+        logging.info(f"Incoming callback URL: {request.url}")
+
+        local_access_token = check_header(request.headers.get("Authorization"))
 
         code = request.query_params.get("code")
         if not code:
             raise HTTPException(status_code=400, detail="Missing auth code")
 
+        state = request.query_params.get("state")
+        if not state:
+            raise HTTPException(status_code=400, detail="Missing query parameter 'state'")
+
+        cloud_name = "db"
+
         query_params = dict(request.query_params)
-        access_token, refresh_token, user_id = await dropbox_oauth.finish_auth(
+
+        access_token, refresh_token, user_id = await dropbox_class.finish_auth(
             session=request.session, query_params=query_params
         )
+        await store_credentials(local_access_token, refresh_token, user_id, cloud_name)
+        dropbox_data = await get_data_for_list(access_token)
 
         return JSONResponse(status_code=200, content={
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "user_id": user_id
+            "cloud_name": cloud_name,
+            "cloud_data": dropbox_data,
         })
     except Exception as e:
         logging.error(f"OAuth error: {str(e)}")
