@@ -116,7 +116,7 @@ async def dropbox_callback(
 async def dropbox_refresh(request: Request):
     local_access_token = check_header(request.headers.get("Authorization"))
     payload = get_data_for_list(local_access_token)
-    user_email = payload.get("email")
+    user_email = payload.get("sub")
     local_user_id = get_user_id(user_email)
     dropbox_accounts = get_dropbox_accounts(local_user_id)
     return JSONResponse(status_code=200, content={"dropbox_accounts": dropbox_accounts})

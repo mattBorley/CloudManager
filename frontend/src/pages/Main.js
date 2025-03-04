@@ -6,12 +6,13 @@ import React, { useState } from "react";
 
 import TabsComponent from "../components/Tabs";
 import CloudList from "../components/CloudList";
-import { useCloud } from "../components/Cloud_Context";
 
 function Main() {
     const navigate = useNavigate();
 
-    const { cloudData, addCloudService } = useCloud();
+    const cloudData = localStorage.getItem("cloudStorage")
+    localStorage.removeItem("cloudStorage")
+    console.log(cloudData)
 
     const toLogin = () => {
         localStorage.removeItem('accessToken');

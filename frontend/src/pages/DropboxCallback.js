@@ -3,13 +3,11 @@ import { useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card } from "@chakra-ui/react";
 import "../styling/apiLoading.css";
-import { useCloud } from "../components/Cloud_Context";
 import {wait} from "@testing-library/user-event/dist/utils";
 
 const DropboxCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { setCloudData } = useCloud(); // Only using setCloudData now
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -46,7 +44,7 @@ const DropboxCallback = () => {
 
         console.log("Dropbox OAuth Success:", response.data);
 
-        setCloudData(response.data);
+        localStorage.setItem("cloudData", response.data.cloud_data)
 
         navigate("/main");
       } catch (error) {
