@@ -106,7 +106,7 @@ const TabsComponent = ({ cloudData }) => {
                                     >
                                         <Tabs variant="enclosed" bg="#4e4e4e" borderRadius={5} width="100%" height="100%" isFitted>
                                             <TabList borderColor="#ffffff" h="8%">
-                                                {["Tree Map", "Pie Chart", "Other"].map((tabLabel, i) => (
+                                                {["Tree Map", "Pie Chart"].map((tabLabel, i) => (
                                                     <Tab
                                                         key={i}
                                                         as="h1"
@@ -129,7 +129,6 @@ const TabsComponent = ({ cloudData }) => {
                                                 <TabPanel shadow="bg" h="100%" w="100%" p={2} justifyContent="center" alignItems="center">
                                                     <PieChart />
                                                 </TabPanel>
-                                                <TabPanel shadow="bg" h="100%" p={2} justifyContent="center" alignItems="center"></TabPanel>
                                             </TabPanels>
                                         </Tabs>
                                     </Box>

@@ -7,6 +7,9 @@ from fastapi import HTTPException
 
 
 def check_header(authorization: str) -> str:
+    if not authorization:
+        raise HTTPException(status_code=400, detail="Authorization header is missing")
+
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Invalid token format")
 

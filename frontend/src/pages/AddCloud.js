@@ -72,18 +72,14 @@ function AddCloud() {
                 setErrorMessage("");
                 google_oauth_logic()
                 break;
-            case "onedrive":
-                console.log("OneDrive selected. Proceeding with OneDrive setup...");
+            case "box":
+                console.log("Box selected. Proceeding with OneDrive setup...");
                 setErrorMessage("");
                 break;
             case "dropbox":
                 console.log("Dropbox selected. Proceeding with Dropbox setup...");
                 setErrorMessage("");
                 await dropbox_oauth_logic();
-                break;
-            case "AWS":
-                console.log("AWS selected. Proceeding with AWS setup...");
-                setErrorMessage("");
                 break;
             default:
                 console.log("No service selected");
@@ -142,15 +138,13 @@ function AddCloud() {
                             <option value="google_drive" style={{background: "#4e4e4e", color: "white"}} >
                                 Google Drive
                             </option>
-                            <option value="onedrive" style={{background: "#4e4e4e", color: "white"}}>
-                                OneDrive
+                            <option value="box" style={{background: "#4e4e4e", color: "white"}}>
+                                Box
                             </option>
                             <option value="dropbox" style={{background: "#4e4e4e", color: "white"}}>
                                 Dropbox
                             </option>
-                            <option value="AWS" style={{background: "#4e4e4e", color: "white"}}>
-                                AWS
-                            </option>
+
                         </Select>
                     </FormControl>
                     <FormControl id={"cloudName"} isRequired mb={6}>

@@ -86,6 +86,7 @@ function Main() {
                             name={"Title: Cloud Storage Manager"}
                             as={"h1"}
                             className={"Heading-style"}
+                            fontSize={"36px"}
                             mb={20}
                         >
                             Cloud Storage Manager
