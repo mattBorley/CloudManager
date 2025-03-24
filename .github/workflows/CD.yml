@@ -153,7 +153,7 @@ jobs:
         run: |
           ssh -T -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
           # Clone or pull the repository from GitHub
-          git config pull.rebase false
+          git config pull.rebase true
           
           if [ ! -d "/home/${{ secrets.VM_USERNAME }}/project" ]; then
             git clone ${{ secrets.REPO_URL }} /home/${{ secrets.VM_USERNAME }}/project
