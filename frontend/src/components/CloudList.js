@@ -4,6 +4,12 @@ import {Box, VStack, Button, Heading} from '@chakra-ui/react';
 const CloudList = ({cloudList}) => {
     const cloud_count = cloudList.length
 
+    const handleLogout = async (cloudName)=> {
+        try {
+            await axios.post('http://localhost:8000/api/cloud/remove', cloudName)
+        }
+    }
+
     return (
         <Box
             name={"Clouds"}
