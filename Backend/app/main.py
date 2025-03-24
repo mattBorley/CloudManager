@@ -33,6 +33,11 @@ except ImportError:
     from routers.google import router as googleRouter
 
 try:
+    from app.routers.box import router as boxRouter
+except ImportError:
+    from routers.box import router as boxRouter
+
+try:
     from app.routers.get_data import router as dataRouter
 except ImportError:
     from routers.get_data import router as dataRouter
@@ -59,6 +64,7 @@ app.include_router(usersRouter, prefix="/api/users", tags=["users"])
 app.include_router(tokensRouter, prefix="/api/tokens", tags=["tokens"])
 app.include_router(dropboxRouter, prefix="/api/dropbox", tags=["dropbox"])
 app.include_router(googleRouter, prefix="/api/google", tags=["google"])
+app.include_router(boxRouter, prefix="/api/box", tags=["box"])
 app.include_router(dataRouter, prefix="/api/data", tags=["data"])
 
 

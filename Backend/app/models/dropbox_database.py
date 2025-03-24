@@ -49,16 +49,6 @@ def insert_into_dropbox_table(local_user_id, dropbox_user_id, refresh_token, nam
         if connection:
             connection.close()
 
-
-# def get_refresh_token(local_access_token):
-#     try:
-#         connection = get_db_connection()
-#         cursor = connection.cursor(dictionary=True)
-#
-#         payload = get_payload_from_access(local_access_token)
-#         user_email = payload['email']
-#         local_user_id = get_user_id(user_email)
-
 def get_dropbox_accounts(local_user_id):
     try:
         connection = get_db_connection()
