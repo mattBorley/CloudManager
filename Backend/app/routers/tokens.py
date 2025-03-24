@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 
 from ..models.token_models import RefreshToken
-from ..utils.token_generation import create_access_token, get_payload, generate_csrf_token
+from ..utils.token_generation import create_access_token, get_payload_from_refresh, generate_csrf_token
 
 router = APIRouter()
 
@@ -21,7 +21,7 @@ async def refresh(request: RefreshToken):
     """
     refresh_token = request.refresh_token
     try:
-        payload = get_payload(refresh_token)
+        payload = get_payload_from_refresh(refresh_token)
 
         if datetime.utcnow() > datetime.utcfromtimestamp(payload["exp"]):
             raise HTTPException(status_code=401, detail="Refresh Token expired")

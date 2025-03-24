@@ -1,7 +1,9 @@
 import axios from "axios";
 
 export const getAccessToken = () => {
-    return localStorage.getItem('accessToken');
+    const accessToken = localStorage.getItem('accessToken');
+    console.log(`Access Token from getAccessToken: ${accessToken}`);
+    return accessToken;
 }
 
 const decodeJWT = (token) => {
@@ -23,13 +25,16 @@ export const isTokenExpired = (token) => {
 export const refreshAccessToken = async () => {
     try {
         const refreshToken = localStorage.getItem('refreshToken')
-        const response = await axios.post('http://localhost:8000/api/tokens/refresh', {
-            refreshToken: refreshToken,
-        });
+        if (!isTokenExpired(refreshToken)) {
+            const response = await axios.post('http://localhost:8000/api/tokens/refresh', {
+                refreshToken: refreshToken,
+            });
 
-        const { accessToken } = response.data;
-        localStorage.setItem('accessToken', accessToken);
-        return accessToken
+            const {accessToken} = response.data;
+            localStorage.setItem('accessToken', accessToken);
+            return accessToken
+        }
+        return null;
     } catch (error) {
         console.error('Error refreshing access token: ', error);
         return null;

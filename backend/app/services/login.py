@@ -1,6 +1,7 @@
 """
 Log In File
 """
+import logging
 
 import bcrypt
 import mysql.connector
@@ -17,17 +18,33 @@ def verify_login(email, password):
     cursor = connection.cursor()
 
     try:
+        # Check if there are any users in the table
+        cursor.execute("SELECT COUNT(*) FROM users")
+        user_count = cursor.fetchone()[0]
+
+        # If no users are found, return False immediately
+        if user_count == 0:
+            logging.info("Users table is empty, login is not allowed.")
+            return False
+
+        # Proceed to validate user
         cursor.execute("SELECT hashed_password FROM users WHERE email=%s", (email,))
         user = cursor.fetchone()
 
-        if user:
-            stored_hash = user[0]
-            if bcrypt.checkpw(password.encode("utf-8"), stored_hash.encode("utf-8")):
-                return {"message": "Login successful", "success": True}
-            return {"message": "Invalid password - login failed", "success": False}
-        return {"message": "User not found - login failed", "success": False}
+        if user is None:
+            logging.info(f"User with email {email} not found in the database.")
+            return False
+
+        # Check if the password matches the stored hash
+        stored_hash = user[0]
+        if bcrypt.checkpw(password.encode("utf-8"), stored_hash.encode("utf-8")):
+            return True
+        return False
+
     except mysql.connector.Error as e:
-        raise HTTPException(status_code=400, detail=f"Database error: {e}")
+        logging.error(f"Database error: {e}")
+        return False
+
     finally:
         cursor.close()
         connection.close()

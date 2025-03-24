@@ -1,3 +1,67 @@
+#version: '3.8'
+#
+#services:
+#  # Nginx Reverse Proxy Service
+#  nginx:
+#    image: nginx:alpine
+#    ports:
+#      - "80:80"   # Expose HTTP port 80
+#      - "443:443"  # Expose HTTPS port 443
+#    depends_on:
+#      - frontend
+#      - backend
+#    volumes:
+#      - ./frontend/nginx.conf:/etc/nginx/nginx.conf  # Mount custom Nginx configuration file
+#      - ./frontend/build:/usr/share/nginx/html  # Mount frontend build directory
+##      - C:/Users/Matt/University/Year_4/Dissertation/GitHub\ Repository/CloudManager/server.crt:/etc/ssl/certs/server.crt
+##      - C:/Users/Matt/University/Year_4/Dissertation/GitHub\ Repository/CloudManager/server.key:/etc/ssl/private/server.key
+##      - C:/Users/Matt/University/Year_4/Dissertation/GitHub\ Repository/CloudManager/dhparam.pem:/etc/ssl/certs/dhparam.pem
+#
+#  # React frontend Service
+#  frontend:
+#    build:
+#      context: frontend
+#      dockerfile: Dockerfile
+#    ports:
+#      - "3000:80"  # Expose port 3000 on host machine to port 80 in the container
+#    depends_on:
+#      - backend    # Ensure that backend starts first
+#
+#  # FastAPI backend Service
+#  backend:
+#    build:
+#      context: backend
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8000:8000"  # Expose port 8000 on the host machine to port 8000 in the container
+##    volumes:
+##      - C:/Users/Matt/University/Year_4/Dissertation/GitHub\ Repository/CloudManager/server.crt:/etc/ssl/certs/server.crt
+##      - C:/Users/Matt/University/Year_4/Dissertation/GitHub\ Repository/CloudManager/server.key:/etc/ssl/private/server.key
+#    env_file:
+#      - .env
+#    environment:
+#      DATABASE_URL: ${DATABASE_URL}
+#    depends_on:
+#      - db-dev  # Ensure database is available before starting the backend
+#
+#  # MySQL Database Service
+#  db-dev:
+#    image: mysql:8.0
+#    container_name: db-dev
+#    environment:
+#      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+#      MYSQL_DATABASE: ${MYSQL_DATABASE}
+#      MYSQL_USER: ${MYSQL_USER}
+#      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+#    ports:
+#      - "3306:3306"  # Expose MySQL database port to the host machine
+#    volumes:
+#      - mysql-data:/var/lib/mysql  # Use a Docker volume to persist MySQL data between restarts
+#
+#volumes:
+#  mysql-data:  # Define a named volume to store MySQL data persistently
+
+
 services:
   # Nginx Reverse Proxy Service
   nginx:

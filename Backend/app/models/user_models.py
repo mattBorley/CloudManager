@@ -1,11 +1,16 @@
 """
 Models for SQLAlchemy and for User endpoints
 """
+import logging
 
-from pydantic import BaseModel
+from fastapi import HTTPException
+from mysql.connector import Error
+from pydantic import BaseModel, EmailStr
 from sqlalchemy import Column, Integer, String, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
+
+from .database import get_db_connection
 
 Base = declarative_base()
 
@@ -43,3 +48,28 @@ class LoginRequest(BaseModel):
     """
     email: str
     password: str
+
+
+def get_user_id(email):
+    logging.info("Email: " + email)
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute(f"SELECT id FROM users WHERE email='{email}'")
+        user = cursor.fetchone()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        local_user_id = user["id"]
+        logging.info(f"Local user id: {local_user_id}")
+
+        return local_user_id
+    except Error as e:
+        logging.error(f"Couldn't get user id: {e}")
+        raise HTTPException(status_code=500, detail=f"Database connection error: {e}")
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
