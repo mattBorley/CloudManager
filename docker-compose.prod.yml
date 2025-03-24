@@ -14,6 +14,7 @@ services:
   # React frontend Service
   frontend:
     image: ${DOCKER_USERNAME}/frontend:latest
+    container_name: cloudmanager-frontend-prod
     ports:
       - "3000:80"  # Expose port 3000 on the host machine and map it to port 80 in the container
     depends_on:
@@ -22,6 +23,7 @@ services:
   # FastAPI backend Service
   backend:
     image: ${DOCKER_USERNAME}/backend:latest
+    container_name: cloudmanager-backend-prod
     ports:
       - "8000:8000"  # Expose port 8000 on the host machine and map it to port 8000 in the container
     env_file:
