@@ -19,6 +19,10 @@ function Main() {
         navigate("/login");
     }
 
+    const refreshPage = () => {
+        window.location.reload()
+    }
+
     const toAddCloud = () => {
         navigate("/addcloud");
     }
@@ -148,6 +152,17 @@ function Main() {
                                 </VStack>
                             </Box>
                             <Box ml={"auto"}>
+                                <Button
+                                    bg="#4e4e4e"
+                                    size="sm"
+                                    borderRadius="md"
+                                    _hover={{bg: "#5e5e5e"}}
+                                    onClick={refreshPage}
+                                    color={"white"}
+                                    mr={5}
+                                >
+                                    Refresh Page
+                                </Button>
                                 <Button
                                     bg="#4e4e4e"
                                     size="sm"

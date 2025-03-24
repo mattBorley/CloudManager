@@ -54,11 +54,11 @@ const App = () => {
                                         </ProtectedRouteFromLoggedIn>
                                     }/>
                                     <Route path="/main" element={
-                                        <ProtectedRouteFromLoggedOut>
+                                        // <ProtectedRouteFromLoggedOut>
                                             <PageTitle title={"Main - Cloud Storage Manager"}>
                                                 <Main/>
                                             </PageTitle>
-                                        </ProtectedRouteFromLoggedOut>
+                                        // </ProtectedRouteFromLoggedOut>
                                     }/>
                                     <Route path="/addcloud" element={
                                         <ProtectedRouteFromLoggedOut>
