@@ -180,7 +180,7 @@ jobs:
           
           # Bring up the containers (start the app)
           sudo docker-compose -f docker-compose.prod.yml up -d
-          docker exec cloudmanager-backend-prod alembic upgrade head
+          docker exec cloudmanager-backend-prod-1 alembic upgrade head
           EOF
 
 #temp comment
