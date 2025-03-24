@@ -1,12 +1,21 @@
 import React from 'react';
 import {Box, VStack, Button, Heading} from '@chakra-ui/react';
+import axios from "axios";
 
 const CloudList = ({cloudList}) => {
     const cloud_count = cloudList.length
 
     const handleLogout = async (cloudName)=> {
         try {
-            await axios.post('http://localhost:8000/api/cloud/remove', cloudName)
+            await axios.post('http://localhost:8000/api/cloud/remove', {
+                cloudName,
+                withCredentials: true
+            });
+            window.location.reload();
+        } catch (error) {
+            console.error("Couldn't remove account: ", error.response)
+            console.error('Status Code:', error.response.status);
+            console.error('Response Data:', error.response.data);
         }
     }
 
