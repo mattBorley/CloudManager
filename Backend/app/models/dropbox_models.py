@@ -103,7 +103,7 @@ class DropboxClass(OAuthBase):
         accounts = get_dropbox_accounts(local_user_id)
         for account in accounts:
             access_token = await DropboxClass.refresh_access_token(self, account.get('refresh_token'))
-            data = await get_data_for_list(access_token)
+            data = await get_dropbox_data_for_list(access_token)
             dropbox_data = {
                 "cloud_name": account.get("name") + " (Dropbox)",
                 "cloud_data": data
@@ -113,7 +113,7 @@ class DropboxClass(OAuthBase):
         return dropbox_clouds
 
 
-async def store_credentials(local_access_token: str, refresh_token: str, user_id: str, cloud_name: str):
+async def dropbox_store_credentials(local_access_token: str, refresh_token: str, user_id: str, cloud_name: str):
     """
     Adds Dropbox account to the database and logs key actions.
     """
@@ -137,7 +137,7 @@ async def store_credentials(local_access_token: str, refresh_token: str, user_id
         logging.error(f"Error storing credentials for user {user_id} in cloud {cloud_name}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-async def get_data_for_list(access_token: str) -> dict:
+async def get_dropbox_data_for_list(access_token: str) -> dict:
     """
     Uses the access token to gather Dropbox account data and file metadata,
     returning a structured response for frontend consumption.
@@ -225,12 +225,10 @@ async def get_data_for_list(access_token: str) -> dict:
                 "largest_file": {
                     "name": largest_file.get('name', 'N/A') if largest_file else 'N/A',
                     "size": largest_file_size if largest_file else 0,
-                    "path": largest_file.get('path_display', 'N/A') if largest_file else 'N/A'
                 },
                 "oldest_file": {
                     "name": oldest_file.get('name', 'N/A') if oldest_file else 'N/A',
                     "modified": oldest_file_time if oldest_file else 'N/A',
-                    "path": oldest_file.get('path_display', 'N/A') if oldest_file else 'N/A'
                 }
             },
             "duplicates": {

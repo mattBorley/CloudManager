@@ -40,21 +40,59 @@ function AddCloud() {
         }
     }
 
-    const google_oauth_logic = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
-            try {
-                const response = await axios.post("http://localhost:8000/api/google/callback", {
-                    token: tokenResponse.access_token,
-                });
-                console.log("User Data:", response.data);
-            } catch (error) {
-                console.error("Error logging in:", error);
-            }
-        },
-        onError: () => console.error("Login Failed"),
-        scope: "https://www.googleapis.com/auth/drive.metadata.readonly email profile",
-    });
+    const google_oauth_logic = useGoogleLogin(
+        {
+            flow: "auth-code",
+            onSuccess: async (response) => {
+                try {
+                    console.log("OAuth response received:", response);
 
+                    const accessToken = localStorage.getItem("accessToken");
+                    if (!accessToken) {
+                        console.error("No access token found in localStorage.");
+                        throw new Error("Access token not found");
+                    }
+                    console.log("Access token found:", accessToken);
+
+                    console.log("Sending request to backend with code:", response.code, "and cloud_name:", cloudName);
+
+                    const apiResponse = await axios.get("http://localhost:8000/api/google/callback", {
+                        params: { code: response.code, cloud_name: cloudName },
+                        headers: { Authorization: `Bearer ${accessToken}` },
+                        withCredentials: true,
+                    });
+
+                    console.log("API Response:", apiResponse.data);
+
+                } catch (error) {
+                    console.error("Error during Google login process:", error);
+                    if (error.response) {
+                        console.error("Error response from server:", error.response.data);
+                    }
+                }
+            },
+            onError: (error) => {
+                console.error("Login failed:", error);
+            },
+            scope: "https://www.googleapis.com/auth/drive.metadata.readonly email profile",
+            redirect_uri: process.env.GOOGLE_REDIRECT_URI
+        }
+    );
+
+    const box_oauth_logic = async () => {
+        console.log("Initiating Box OAuth.")
+        try {
+            const response = await axios.get("http://localhost:8000/api/box/authorization", {
+                withCredentials: true,
+            });
+            console.log("Response: ", response)
+            localStorage.setItem("cloudName", cloudName);
+            window.location.href = response.data.auth_url; // Redirect user to Box OAuth URL
+        } catch (error) {
+            console.error("Error initiating Box OAuth:", error);
+            setErrorMessage("Error initiating Box OAuth.");
+        }
+    }
 
     const toMain = () => {
         navigate("/main");
@@ -70,11 +108,12 @@ function AddCloud() {
             case "google_drive":
                 console.log("Google Drive selected. Proceeding with Google Drive setup...");
                 setErrorMessage("");
-                google_oauth_logic()
+                google_oauth_logic();
                 break;
             case "box":
                 console.log("Box selected. Proceeding with OneDrive setup...");
                 setErrorMessage("");
+                await box_oauth_logic()
                 break;
             case "dropbox":
                 console.log("Dropbox selected. Proceeding with Dropbox setup...");
@@ -87,11 +126,7 @@ function AddCloud() {
         }
     };
 
-    useEffect(() => {
-        if (cloudName) {
-            console.log("Cloud name updated:", cloudName); // This will print when cloudName changes
-        }
-    }, [cloudName]); // React to cloudName change
+    useEffect(() => {}, [cloudName]); // React to cloudName change
 
     return (
         <Card

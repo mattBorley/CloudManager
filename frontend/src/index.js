@@ -12,7 +12,8 @@ import Main from './pages/Main'
 import AddCloud from './pages/AddCloud'
 import PageTitle from "./components/PageTitle";
 import { ProtectedRouteFromLoggedOut, ProtectedRouteFromLoggedIn } from "./components/ProtectedRoutes";
-import DropboxOAuth from "./pages/DropboxCallback";
+import DropboxCallback from "./pages/DropboxCallback";
+import BoxCallback from "./pages/BoxCallback";
 import {CloudProvider} from "./components/Cloud_Context";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
@@ -69,8 +70,15 @@ const App = () => {
                                     <Route path="/dropbox-callback" element={
                                         <ProtectedRouteFromLoggedOut>
                                            <PageTitle title={"Dropbox Callback - Cloud Storage Manager"}>
-                                               <DropboxOAuth/>
+                                               <DropboxCallback/>
                                            </PageTitle>
+                                        </ProtectedRouteFromLoggedOut>
+                                    }/>
+                                    <Route path="/boxcallback" element={
+                                        <ProtectedRouteFromLoggedOut>
+                                            <PageTitle title={"Box Callback - Cloud Storage Manager"}>
+                                                <BoxCallback/>
+                                            </PageTitle>
                                         </ProtectedRouteFromLoggedOut>
                                     }/>
                                 </Routes>

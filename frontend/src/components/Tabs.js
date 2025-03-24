@@ -2,18 +2,22 @@ import { Box, Flex, Tab, TabList, TabPanel, TabPanels, Tabs, Text } from "@chakr
 import React from "react";
 import TreeMap from "./Graphs/TreeMap";
 import PieChart from "./Graphs/PieChart";
-import { GraphDataProvider } from "./Graphs/GetData"; // ✅ Fixed Import Path
+import { GraphDataProvider } from "./Graphs/GetData";
 
-// ✅ Function to format storage size in GB or MB
 const formatStorageSize = (bytes) => {
-    if (bytes >= 1e9) {
+    if (bytes >= 1e12) {
+        return `${(bytes / 1e12).toFixed(2)} TB`;
+    } else if (bytes >= 1e9) {
         return `${(bytes / 1e9).toFixed(2)} GB`;
     } else if (bytes >= 1e6) {
         return `${(bytes / 1e6).toFixed(2)} MB`;
+    } else if (bytes >= 1e3) {
+        return `${(bytes / 1e3).toFixed(2)} KB`;
     } else {
         return `${bytes} bytes`;
     }
 };
+
 
 const TabsComponent = ({ cloudData }) => {
     return (

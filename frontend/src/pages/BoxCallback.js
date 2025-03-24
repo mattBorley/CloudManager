@@ -4,14 +4,14 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card } from "@chakra-ui/react";
 import "../styling/apiLoading.css";
 
-const DropboxCallback = () => {
+const BoxCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     const handleCallback = async () => {
+      console.log("Starting Box callback")
       const code = searchParams.get("code");
-      const state = searchParams.get("state");
       const cloudName = localStorage.getItem("cloudName");
       localStorage.removeItem("cloudName")
 
@@ -20,6 +20,7 @@ const DropboxCallback = () => {
         navigate("/addcloud");
         return;
       }
+
       if (!cloudName) {
         console.error("No cloud name found.");
         navigate("/addcloud");
@@ -28,8 +29,8 @@ const DropboxCallback = () => {
 
       const accessToken = localStorage.getItem("accessToken")
       try {
-        await axios.get("http://localhost:8000/api/dropbox/callback", {
-          params: { code, state, cloud_name: cloudName },
+        await axios.get("http://localhost:8000/api/box/callback", {
+          params: { code, cloud_name: cloudName },
           headers: { Authorization: `Bearer ${accessToken}` },
           withCredentials: true,
         });
@@ -61,4 +62,4 @@ const DropboxCallback = () => {
   );
 };
 
-export default DropboxCallback;
+export default BoxCallback;

@@ -72,7 +72,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    needs: test
+    needs: source
     steps:
       # Checkout the code
       - name: Checkout code
@@ -120,7 +120,7 @@ jobs:
       - name: Run Alembic migration
         run: |
           cd backend
-          alembic upgrade head  # This will apply all migrations to the latest version
+          alembic upgrade head
 
   deploy:
     runs-on: ubuntu-latest
