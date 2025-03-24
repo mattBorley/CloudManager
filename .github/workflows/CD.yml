@@ -157,7 +157,7 @@ jobs:
             git clone ${{ secrets.REPO_URL }} /home/${{ secrets.VM_USERNAME }}/project
           else
             cd /home/${{ secrets.VM_USERNAME }}/project
-            git pull
+            git pull origin main
           fi
           EOF
 
@@ -182,5 +182,3 @@ jobs:
           sudo docker-compose -f docker-compose.prod.yml up -d
           docker exec backend alembic upgrade head
           EOF
-
-#temp comment
