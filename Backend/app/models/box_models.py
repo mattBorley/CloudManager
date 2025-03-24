@@ -11,7 +11,7 @@ from fastapi import HTTPException
 from .user_models import get_user_id
 
 try:
-    from app.models.box_database import insert_into_box_table, get_box_accounts
+    from app.models.box_database import insert_into_box_table, get_box_accounts, update_refresh_token
     from app.utils.token_generation import get_payload_from_access
     from app.models.oauth import OAuthBase
 except ImportError:
