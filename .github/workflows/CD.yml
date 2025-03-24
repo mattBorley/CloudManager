@@ -176,7 +176,7 @@ jobs:
           cd /home/${{ secrets.VM_USERNAME }}/project
           
           # If necessary, stop and remove old containers
-          sudo docker-compose -f docker-compose.prod.yml down
+          sudo docker-compose -f docker-compose.prod.yml down --remove-orphans
           
           # Bring up the containers (start the app)
           sudo docker-compose -f docker-compose.prod.yml up -d

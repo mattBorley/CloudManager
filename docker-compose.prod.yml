@@ -27,7 +27,7 @@ services:
     ports:
       - "8000:8000"  # Expose port 8000 on the host machine and map it to port 8000 in the container
     env_file:
-      - .env
+      - .env_prod
     environment:
       DATABASE_URL: mysql+mysqlclient://fastapi_user:faster-AP1-password@db-prod:3306/clouddatabase
     depends_on:
