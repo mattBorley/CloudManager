@@ -4,10 +4,15 @@ const GraphDataContext = createContext();
 
 const processStorageData = (storage) => {
   if (!storage || storage.used_storage === undefined || storage.total_storage === undefined) {
-    return { sortedData: [], minValue: 0, maxValue: 0 };
+    return {
+      sortedData: [],
+      minValue: 0,
+      maxValue: 0,
+      file_types: [],  // Make sure file_types is returned even if it's empty
+    };
   }
 
-  const { used_storage, total_storage, remaining_storage } = storage;
+  const { used_storage, total_storage, remaining_storage, file_metadata } = storage;
 
   const availableStorage = remaining_storage !== undefined ? remaining_storage : total_storage - used_storage;
 
@@ -24,6 +29,7 @@ const processStorageData = (storage) => {
     maxValue: total_storage,
     used_storage,
     remaining_storage: availableStorage,
+    file_types: file_metadata?.file_types || [],  // Ensure file_types is included, if available
   };
 };
 

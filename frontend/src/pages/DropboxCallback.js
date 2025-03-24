@@ -20,6 +20,13 @@ const DropboxCallback = () => {
         navigate("/addcloud");
         return;
       }
+
+      if (!state) {
+        console.error("No state found.");
+        navigate("/addcloud");
+        return;
+      }
+
       if (!cloudName) {
         console.error("No cloud name found.");
         navigate("/addcloud");

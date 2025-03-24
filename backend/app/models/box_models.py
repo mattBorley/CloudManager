@@ -138,7 +138,7 @@ async def get_box_data_for_list(access_token: str) -> dict:
     Uses the access token to gather Box account data and file metadata,
     returning a structured response for frontend consumption.
     """
-    print (access_token)
+    print(access_token)
 
     # API Endpoints
     space_usage_url = "https://api.box.com/2.0/users/me"
@@ -177,6 +177,7 @@ async def get_box_data_for_list(access_token: str) -> dict:
         oldest_file = None
         oldest_file_time = None
         duplicates = {}
+        file_types = {}  # Dictionary to store file types
 
         print("Fetching file metadata from Box...")  # Logging file metadata request
         # Get file metadata (recursive request to get all files)
@@ -204,6 +205,11 @@ async def get_box_data_for_list(access_token: str) -> dict:
                 created_at = entry.get('created_at', '')
 
                 file_count += 1
+
+                # Count file types based on extension
+                file_extension = os.path.splitext(file_name)[1].lower()
+                if file_extension:
+                    file_types[file_extension] = file_types.get(file_extension, 0) + 1
 
                 if file_size > largest_file_size:
                     largest_file = entry
@@ -250,7 +256,8 @@ async def get_box_data_for_list(access_token: str) -> dict:
             },
             "sync_info": {
                 "last_synced": oldest_file_time if oldest_file else 'N/A'
-            }
+            },
+            "file_types": file_types  # Add file types count here
         }
 
         # Logging the structured data going into the response
@@ -259,6 +266,7 @@ async def get_box_data_for_list(access_token: str) -> dict:
         print(f"File Metadata: {data['file_metadata']}")
         print(f"Duplicates: {data['duplicates']}")
         print(f"Sync Info: {data['sync_info']}")
+        print(f"File Types: {data['file_types']}")  # Log file types
 
         print("Data successfully fetched and structured.")  # Success log
         return data

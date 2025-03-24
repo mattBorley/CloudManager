@@ -69,16 +69,20 @@ class DropboxClass(OAuthBase):
         """
         Complete the Dropbox OAuth flow and retrieve access & refresh tokens.
         """
+        print("Starting OAuth flow completion...")
         flow = self.create_flow(session)
 
         try:
+            print("Finishing OAuth flow with provided query parameters...")
             oauth_result = flow.finish(query_params)
             access_token = oauth_result.access_token
             user_id = oauth_result.account_id
             refresh_token = getattr(oauth_result, "refresh_token", None)
 
+            print(f"OAuth flow completed successfully. User ID: {user_id}")
             return access_token, refresh_token, user_id
         except Exception as e:
+            print(f"Error during OAuth flow: {str(e)}")
             raise Exception(f"Failed to complete OAuth: {str(e)}")
 
     async def refresh_access_token(self, refresh_token: str) -> str:
@@ -137,6 +141,8 @@ async def dropbox_store_credentials(local_access_token: str, refresh_token: str,
         logging.error(f"Error storing credentials for user {user_id} in cloud {cloud_name}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+import os
+
 async def get_dropbox_data_for_list(access_token: str) -> dict:
     """
     Uses the access token to gather Dropbox account data and file metadata,
@@ -176,6 +182,7 @@ async def get_dropbox_data_for_list(access_token: str) -> dict:
         oldest_file = None
         oldest_file_time = None
         duplicates = {}
+        file_types = {}
 
         file_metadata_response = requests.post(list_folder_url, headers=headers, json={"path": "", "recursive": True})
 
@@ -197,6 +204,11 @@ async def get_dropbox_data_for_list(access_token: str) -> dict:
                 client_modified = entry.get('client_modified', '')
 
                 file_count += 1
+
+                # Count file types based on extension
+                file_extension = os.path.splitext(file_name)[1].lower()
+                if file_extension:
+                    file_types[file_extension] = file_types.get(file_extension, 0) + 1
 
                 if file_size > largest_file_size:
                     largest_file = entry
@@ -237,7 +249,8 @@ async def get_dropbox_data_for_list(access_token: str) -> dict:
             },
             "sync_info": {
                 "last_synced": oldest_file_time if oldest_file else 'N/A'
-            }
+            },
+            "file_types": file_types  # Add file types count here
         }
         return data
 

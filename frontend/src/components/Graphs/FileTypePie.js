@@ -3,21 +3,21 @@ import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useGraphData } from "./GetData";  // Import custom hook for context
 import { interpolateColor } from "./GraphCommonElements";  // Assuming this is a custom function for color interpolation
 
-const MyPieChart = () => {
-  const { used_storage, remaining_storage } = useGraphData();
+const FileTypesPieChart = () => {
+  const { file_types } = useGraphData(); // Assuming file_types is part of cloudData
 
   useEffect(() => {
-    console.log("Used Storage:", used_storage);
-    console.log("Available Storage:", remaining_storage);
-  }, [used_storage, remaining_storage]);  // Run effect whenever the data changes
+    console.log("File Types:", file_types); // Check the data coming from context
+  }, [file_types]);
 
-  const chartData = [
-    { name: "Used Storage", value: used_storage },
-    { name: "Available Storage", value: remaining_storage },
-  ];
+  // Map the file types data to the chart format
+  const chartData = file_types.map((fileType) => ({
+    name: fileType.type,
+    value: fileType.size,
+  }));
 
   const minValue = 0;
-  const maxValue = used_storage + remaining_storage;
+  const maxValue = chartData.reduce((acc, entry) => acc + entry.value, 0);
 
   return (
     <PieChart width={750} height={550}>
@@ -75,10 +75,10 @@ const MyPieChart = () => {
           fontWeight: "bold",
         }}
       >
-        Storage Usage
+        File Types Distribution
       </text>
     </PieChart>
   );
 };
 
-export default MyPieChart;
+export default FileTypesPieChart;

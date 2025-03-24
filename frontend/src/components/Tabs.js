@@ -3,6 +3,7 @@ import React from "react";
 import TreeMap from "./Graphs/TreeMap";
 import PieChart from "./Graphs/PieChart";
 import { GraphDataProvider } from "./Graphs/GetData";
+import FileTypesPieChart from "./Graphs/FileTypePie";
 
 const formatStorageSize = (bytes) => {
     if (bytes >= 1e12) {
@@ -52,44 +53,57 @@ const TabsComponent = ({ cloudData }) => {
                             <Flex w="100%" h="100%" justifyContent="space-between" alignItems="center">
                                 <Box bg="#4e4e4e" w="30%" h="98%" p={4} borderRadius={5} overflowY="auto">
                                     <p className="title">Storage Information:</p>
+
                                     <div className="row">
                                         <p className="label">Storage used:</p>
                                         <p className="value">{formatStorageSize(cloud.cloud_data.storage.used_storage)}</p>
                                     </div>
+
                                     <div className="row">
                                         <p className="label">Capacity:</p>
                                         <p className="value">{formatStorageSize(cloud.cloud_data.storage.total_storage)}</p>
                                     </div>
+
                                     <div className="row">
                                         <p className="label">Remaining Storage:</p>
                                         <p className="value">{formatStorageSize(cloud.cloud_data.storage.remaining_storage)}</p>
                                     </div>
+
                                     <div className="row">
                                         <p className="label">Number of files:</p>
                                         <p className="value">{cloud.cloud_data.file_metadata.file_count}</p>
                                     </div>
+
                                     <div className="row">
-                                        <p className="label">Largest File:</p>
-                                        <p className="value">
-                                            {cloud.cloud_data.file_metadata.largest_file.name} (
-                                            {formatStorageSize(cloud.cloud_data.file_metadata.largest_file.size)})
-                                        </p>
+                                        <p className="label">Largest File Name:</p>
+                                        <p className="value">{cloud.cloud_data.file_metadata.largest_file.name}</p>
                                     </div>
+
                                     <div className="row">
-                                        <p className="label">Oldest File:</p>
-                                        <p className="value">
-                                            {cloud.cloud_data.file_metadata.oldest_file.name} - Last Modified:{" "}
-                                            {cloud.cloud_data.file_metadata.oldest_file.modified}
-                                        </p>
+                                        <p className="label">Largest File Size:</p>
+                                        <p className="value">{formatStorageSize(cloud.cloud_data.file_metadata.largest_file.size)}</p>
                                     </div>
+
+                                    <div className="row">
+                                        <p className="label">Oldest File Name:</p>
+                                        <p className="value">{cloud.cloud_data.file_metadata.oldest_file.name}</p>
+                                    </div>
+
+                                    <div className="row">
+                                        <p className="label">Oldest File Last Modified:</p>
+                                        <p className="value">{cloud.cloud_data.file_metadata.oldest_file.modified}</p>
+                                    </div>
+
                                     <div className="row">
                                         <p className="label">Number of duplicates:</p>
                                         <p className="value">{cloud.cloud_data.duplicates.duplicate_count}</p>
                                     </div>
+
                                     <div className="row">
                                         <p className="label">Storage used by duplicates:</p>
                                         <p className="value">{formatStorageSize(cloud.cloud_data.duplicates.storage_used_by_duplicates)}</p>
                                     </div>
+
                                     <div className="row">
                                         <p className="label">Last Synced:</p>
                                         <p className="value">{cloud.cloud_data.sync_info.last_synced}</p>
@@ -132,6 +146,9 @@ const TabsComponent = ({ cloudData }) => {
                                                 </TabPanel>
                                                 <TabPanel shadow="bg" h="100%" w="100%" p={2} justifyContent="center" alignItems="center">
                                                     <PieChart />
+                                                </TabPanel>
+                                                <TabPanel shadow="bg" h="100%" w="100%" p={2} justifyContent="center" alignItems="center">
+                                                    <FileTypesPieChart />
                                                 </TabPanel>
                                             </TabPanels>
                                         </Tabs>
