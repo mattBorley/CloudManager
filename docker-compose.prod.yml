@@ -13,7 +13,7 @@ services:
 
   # React frontend Service
   frontend:
-    image: mattborley02/frontend:latest
+    image: ${DOCKER_USERNAME}/frontend:latest
     container_name: cloudmanager-frontend-prod
     ports:
       - "3000:80"  # Expose port 3000 on the host machine and map it to port 80 in the container
@@ -22,12 +22,12 @@ services:
 
   # FastAPI backend Service
   backend:
-    image: mattborley02/backend:latest
+    image: ${DOCKER_USERNAME}/backend:latest
     container_name: cloudmanager-backend-prod
     ports:
       - "8000:8000"  # Expose port 8000 on the host machine and map it to port 8000 in the container
     environment:
-      DATABASE_URL: mysql+mysqlclient://fastapi_user:faster-AP1-password@db-prod:3306/clouddatabase
+      DATABASE_URL: ${DATABASE_URL_PROD}
     depends_on:
       - db-prod  # Ensure that the MySQL database is available before the backend starts
 
@@ -36,10 +36,10 @@ services:
     image: mysql:8.0
     container_name: db-prod
     environment:
-      MYSQL_ROOT_PASSWORD: Docker-2024-Moria-!-
-      MYSQL_DATABASE: clouddatabase
-      MYSQL_USER: fastapi_user
-      MYSQL_PASSWORD: faster-AP1-password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"  # Expose port 3306 for MySQL database (host:container)
     volumes:
