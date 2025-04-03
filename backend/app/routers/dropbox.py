@@ -74,10 +74,7 @@ async def dropbox_callback(
         local_access_token = check_header(request.headers.get("Authorization"))
         print(f"Extracted local access token: {local_access_token}")
 
-        body = await request.json()
-        print(f"Received request body: {body}")
-
-        code = body.get("code")
+        code = request.query_params.get("code")
         if not code:
             print("Error: Missing auth code")
             raise HTTPException(status_code=400, detail="Missing auth code")

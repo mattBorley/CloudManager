@@ -10,10 +10,15 @@ const DropboxCallback = () => {
 
   useEffect(() => {
     const handleCallback = async () => {
+      console.log("Handling OAuth callback...");
       const code = searchParams.get("code");
       const state = searchParams.get("state");
       const cloudName = localStorage.getItem("cloudName");
-      localStorage.removeItem("cloudName")
+      localStorage.removeItem("cloudName");
+
+      console.log("Extracted code:", code);
+      console.log("Extracted state:", state);
+      console.log("Extracted cloudName:", cloudName);
 
       if (!code) {
         console.error("No authorization code found.");
@@ -33,14 +38,18 @@ const DropboxCallback = () => {
         return;
       }
 
-      const accessToken = localStorage.getItem("accessToken")
+      const accessToken = localStorage.getItem("accessToken");
+      console.log("Using accessToken:", accessToken);
+
       try {
+        console.log("Sending request to backend...");
         await axios.get("http://localhost:8000/api/dropbox/callback", {
           params: { code, state, cloud_name: cloudName },
           headers: { Authorization: `Bearer ${accessToken}` },
           withCredentials: true,
         });
 
+        console.log("OAuth callback handled successfully, navigating to /main");
         navigate("/main");
       } catch (error) {
         console.error("Error handling Dropbox OAuth callback:", error);
@@ -50,6 +59,7 @@ const DropboxCallback = () => {
 
     handleCallback();
   }, [searchParams, navigate]);
+
 
   return (
     <Card

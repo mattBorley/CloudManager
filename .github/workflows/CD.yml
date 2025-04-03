@@ -142,7 +142,7 @@ jobs:
         run: |
           ssh -T -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
           # Set up the deploy key for GitHub access (in VM)
-          echo ${{ secrets.VMPRIVATEKEY }} > ~/.ssh/github_deploy_key
+          echo ${{ secrets.VMPRIVATEKEY }} | base64 --decode > ~/.ssh/github_deploy_key
           chmod 600 ~/.ssh/github_deploy_key
           echo "Host github.com" >> ~/.ssh/config
           echo "  IdentityFile ~/.ssh/github_deploy_key" >> ~/.ssh/config

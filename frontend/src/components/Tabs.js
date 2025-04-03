@@ -5,7 +5,7 @@ import PieChart from "./Graphs/PieChart";
 import { GraphDataProvider } from "./Graphs/GetData";
 import FileTypesPieChart from "./Graphs/FileTypePie";
 
-const formatStorageSize = (bytes) => {
+export const formatStorageSize = (bytes) => {
     if (bytes >= 1e12) {
         return `${(bytes / 1e12).toFixed(2)} TB`;
     } else if (bytes >= 1e9) {
@@ -18,6 +18,26 @@ const formatStorageSize = (bytes) => {
         return `${bytes} bytes`;
     }
 };
+
+export const fixTimestampFormat = (timestamp) => {
+    if (!timestamp) return "N/A"; // Handle missing values
+
+    const cleanedTimestamp = timestamp.replace(/\s+/g, ""); // Remove unwanted spaces
+
+    const date = new Date(cleanedTimestamp);
+
+    return date.toLocaleString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+        timeZone: "UTC"
+    });
+};
+
 
 
 const TabsComponent = ({ cloudData }) => {
@@ -48,7 +68,9 @@ const TabsComponent = ({ cloudData }) => {
 
             <TabPanels borderColor="#2e2e2e" h="92%">
                 {cloudData.length > 0 ? (
-                    cloudData.map((cloud, index) => (
+                    cloudData.map((cloud, index) => {
+                        console.log("cloud data: ", cloud.cloud_data);
+                        return (
                         <TabPanel key={index} shadow="bg" h="100%" p={2}>
                             <Flex w="100%" h="100%" justifyContent="space-between" alignItems="center">
                                 <Box bg="#4e4e4e" w="30%" h="98%" p={4} borderRadius={5} overflowY="auto">
@@ -91,7 +113,7 @@ const TabsComponent = ({ cloudData }) => {
 
                                     <div className="row">
                                         <p className="label">Oldest File Last Modified:</p>
-                                        <p className="value">{cloud.cloud_data.file_metadata.oldest_file.modified}</p>
+                                        <p className="value">{fixTimestampFormat(cloud.cloud_data.file_metadata.oldest_file.modified)}</p>
                                     </div>
 
                                     <div className="row">
@@ -106,10 +128,10 @@ const TabsComponent = ({ cloudData }) => {
 
                                     <div className="row">
                                         <p className="label">Last Synced:</p>
-                                        <p className="value">{cloud.cloud_data.sync_info.last_synced}</p>
+                                        <p className="value">{fixTimestampFormat(cloud.cloud_data.sync_info.last_synced)}</p>
                                     </div>
                                 </Box>
-                                <GraphDataProvider cloudData={cloud.cloud_data.storage}>
+                                <GraphDataProvider cloudData={cloud.cloud_data}>
                                     <Box
                                         bg="#2e2e2e"
                                         w="68%"
@@ -124,7 +146,7 @@ const TabsComponent = ({ cloudData }) => {
                                     >
                                         <Tabs variant="enclosed" bg="#4e4e4e" borderRadius={5} width="100%" height="100%" isFitted>
                                             <TabList borderColor="#ffffff" h="8%">
-                                                {["Tree Map", "Pie Chart"].map((tabLabel, i) => (
+                                                {["Storage Pie", "File Type Pie", "Tree Map"].map((tabLabel, i) => (
                                                     <Tab
                                                         key={i}
                                                         as="h1"
@@ -139,16 +161,15 @@ const TabsComponent = ({ cloudData }) => {
                                                     </Tab>
                                                 ))}
                                             </TabList>
-
                                             <TabPanels>
-                                                <TabPanel shadow="bg" h="100%" p={6} justifyContent="center" alignItems="center">
-                                                    <TreeMap />
-                                                </TabPanel>
                                                 <TabPanel shadow="bg" h="100%" w="100%" p={2} justifyContent="center" alignItems="center">
                                                     <PieChart />
                                                 </TabPanel>
                                                 <TabPanel shadow="bg" h="100%" w="100%" p={2} justifyContent="center" alignItems="center">
                                                     <FileTypesPieChart />
+                                                </TabPanel>
+                                                <TabPanel shadow="bg" h="100%" p={6} justifyContent="center" alignItems="center">
+                                                    <TreeMap />
                                                 </TabPanel>
                                             </TabPanels>
                                         </Tabs>
@@ -156,7 +177,7 @@ const TabsComponent = ({ cloudData }) => {
                                 </GraphDataProvider>
                             </Flex>
                         </TabPanel>
-                    ))
+                    )})
                 ) : (
                     <TabPanel>
                         <Text color="white">Please add a cloud service.</Text>

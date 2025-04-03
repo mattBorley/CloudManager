@@ -1,14 +1,17 @@
 import React, { useEffect } from "react";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useGraphData } from "./GetData";  // Import custom hook for context
-import { interpolateColor } from "./GraphCommonElements";  // Assuming this is a custom function for color interpolation
+import { interpolateColor } from "./GraphCommonElements";
+import {formatStorageSize} from "../Tabs";  // Assuming this is a custom function for color interpolation
 
 const MyPieChart = () => {
   const { used_storage, remaining_storage } = useGraphData();
 
   useEffect(() => {
     console.log("Used Storage:", used_storage);
+    console.log("Used Storage:", formatStorageSize(used_storage));
     console.log("Available Storage:", remaining_storage);
+    console.log("Available Storage:", formatStorageSize(remaining_storage));
   }, [used_storage, remaining_storage]);  // Run effect whenever the data changes
 
   const chartData = [
@@ -60,7 +63,7 @@ const MyPieChart = () => {
         payload={chartData.map((entry, index) => ({
           value: entry.name,
           type: "circle",
-          color: interpolateColor(entry.value, minValue, maxValue),  // Set the color to the stroke color
+          color: interpolateColor(entry.value, formatStorageSize(minValue), formatStorageSize(maxValue)),
         }))}
       />
 
