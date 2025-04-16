@@ -67,3 +67,33 @@ def get_google_accounts(local_user_id):
         if connection:
             connection.close()
 
+def remove_from_google_table(local_user_id, name):
+    print("ID: ", local_user_id)
+    print("Name: ", name)
+    try:
+        connection = get_db_connection()
+
+        cursor = connection.cursor(dictionary=True)
+
+        query = """
+            DELETE FROM google_accounts
+            WHERE local_user_id = %s AND name = %s
+        """
+
+        cursor.execute(query, (local_user_id, name))
+
+        connection.commit()
+
+        if cursor.rowcount > 0:
+            logging.info(f"Successfully removed {cursor.rowcount} record(s) from google_accounts")
+        else:
+            logging.warning(f"No records found to remove for local_user_id: {local_user_id} and name: {name}")
+
+    except Error as e:
+        logging.error(f"Error occurred: {e}")
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()

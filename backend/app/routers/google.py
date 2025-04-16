@@ -26,24 +26,23 @@ google_auth = GoogleClass(
 )
 
 
-@router.get("/callback")
+@router.post("/callback")
 async def google_oauth_callback(request: Request):
     try:
-        print("Google OAuth callback received.")
+        print(f"Google OAuth callback received. {request}")
 
-        # Check for the Authorization header
         local_access_token = check_header(request.headers.get("Authorization"))
         print(f"Authorization header found: {local_access_token is not None}")
 
-        # Get the 'code' query parameter
-        code = request.query_params.get("code")
+        data = await request.json()
+        code = data.get("code")
+        cloud_name = data.get("cloud_name")
+
         if not code:
             print("Missing authorization code.")
             raise HTTPException(status_code=400, detail="Missing auth code")
         print(f"Received code: {code}")
 
-        # Get the 'cloud_name' query parameter
-        cloud_name = request.query_params.get("cloud_name")
         if not cloud_name:
             print("Missing cloud_name parameter.")
             raise HTTPException(status_code=400, detail="Missing query parameter 'cloud_name'")

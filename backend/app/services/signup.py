@@ -5,7 +5,6 @@ Sign Up file
 from fastapi import HTTPException
 import mysql.connector
 from ..models.database import get_db_connection
-import logging
 
 
 async def store_user_in_database(email, name, hashed_password):
@@ -14,24 +13,24 @@ async def store_user_in_database(email, name, hashed_password):
     """
     connection = get_db_connection()
     if connection:
-        logging.info("Database connection successful")
+        print("✅ Database connection successful")
     else:
-        logging.error("Database connection failed")
+        print("❌ Database connection failed")
         raise HTTPException(status_code=500, detail="Failed to connect to the database")
 
     cursor = connection.cursor()
 
     try:
-        # Log before the query execution
-        logging.info(f"Checking if user with email {email} already exists.")
+        # Before checking if user exists
+        print(f"🔍 Checking if user with email '{email}' already exists...")
 
         cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
         if cursor.fetchone():
-            logging.warning(f"Email {email} is already registered.")
+            print(f"⚠️ Email '{email}' is already registered.")
             raise HTTPException(status_code=400, detail="Email already registered")
 
-        # Log before inserting the user
-        logging.info(f"Inserting user with email {email} into the database.")
+        # Before inserting the new user
+        print(f"📝 Inserting new user with email '{email}' into the database...")
 
         cursor.execute(
             "INSERT INTO users (email, name, hashed_password) VALUES (%s, %s, %s)",
@@ -39,26 +38,24 @@ async def store_user_in_database(email, name, hashed_password):
         )
         connection.commit()
 
-        # Log after insertion to verify if the entry is successfully added
-        logging.info(f"User with email {email} inserted into the database. Verifying insertion.")
+        # After insertion, verifying
+        print(f"✅ Inserted user with email '{email}'. Verifying insertion...")
 
-        # Verifying the insertion by querying the users table again
         cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
         inserted_user = cursor.fetchone()
 
         if inserted_user:
-            logging.info(f"User with email {email} successfully registered and verified.")
+            print(f"🎉 User '{email}' successfully registered and verified.")
             return True
         else:
-            logging.error(f"User with email {email} was not found in the database after insertion.")
+            print(f"❌ User '{email}' not found in database after insertion.")
             raise HTTPException(status_code=500, detail="User insertion failed")
 
     except mysql.connector.Error as e:
-        # Log the error message
-        logging.error(f"Database error: {e}")
+        print(f"❌ Database error occurred: {e}")
         raise HTTPException(status_code=400, detail=f"Database error: {e}")
+
     finally:
-        # Ensure cursor and connection are closed properly
         cursor.close()
         connection.close()
-        logging.info("Database connection closed.")
+        print("🔒 Database connection closed.")

@@ -59,11 +59,9 @@ def get_box_accounts(local_user_id):
 
 
 def update_refresh_token(old_refresh_token, new_refresh_token):
-    print("Updating refresh token")
     connection = None
     cursor = None
     try:
-        print("Attempting to connect to the database...")
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
 
@@ -75,10 +73,8 @@ def update_refresh_token(old_refresh_token, new_refresh_token):
             """,
             (new_refresh_token, old_refresh_token)
         )
-        print("Query executed, committing changes...")
         connection.commit()
 
-        print("Refresh token updated successfully.")
 
     except Error as e:
         print(f"Error occurred while updating refresh_token: {e}")
@@ -87,8 +83,36 @@ def update_refresh_token(old_refresh_token, new_refresh_token):
 
     finally:
         if cursor:
-            print("Closing cursor...")
             cursor.close()
         if connection:
-            print("Closing connection...")
+            connection.close()
+
+
+
+def remove_from_box_table(local_user_id, name):
+    print("ID: ", local_user_id)
+    print("Name: ", name)
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        query = """
+            DELETE FROM box_accounts
+            WHERE local_user_id = %s AND name = %s
+        """
+
+        cursor.execute(query, (local_user_id, name))
+        connection.commit()
+
+        if cursor.rowcount > 0:
+            logging.info(f"Successfully removed {cursor.rowcount} record(s) from box_accounts")
+        else:
+            logging.warning(f"No records found to remove for local_user_id: {local_user_id} and name: {name}")
+
+    except Error as e:
+        logging.error(f"Error occurred: {e}")
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
             connection.close()

@@ -11,11 +11,11 @@ from fastapi import HTTPException
 from .user_models import get_user_id
 
 try:
-    from app.models.box_database import insert_into_box_table, get_box_accounts, update_refresh_token
+    from app.models.box_database import insert_into_box_table, get_box_accounts, update_refresh_token, remove_from_box_table
     from app.utils.token_generation import get_payload_from_access
     from app.models.oauth import OAuthBase
 except ImportError:
-    from ..models.box_database import insert_into_box_table, get_box_accounts, update_refresh_token
+    from ..models.box_database import insert_into_box_table, get_box_accounts, update_refresh_token, remove_from_box_table
     from ..utils.token_generation import get_payload_from_access
     from ..models.oauth import OAuthBase
 
@@ -133,13 +133,22 @@ async def box_store_credentials(local_access_token: str, refresh_token: str, clo
         logging.error(error_msg)
         raise HTTPException(status_code=500, detail=str(e))
 
+async def remove_box_account(cloud_name, local_access_token):
+    """
+    Removes account from the database and logs key actions.
+    """
+    payload = get_payload_from_access(local_access_token)
+    user_email = payload.get("sub")
+
+    local_user_id = get_user_id(user_email)
+    remove_from_box_table(local_user_id, cloud_name[:-6])
+
+
 async def get_box_data_for_list(access_token: str) -> dict:
     """
     Uses the access token to gather Box account data and file metadata,
-    returning a structured response for frontend consumption.
+    returning a structured response for frontend consumption, including folder structure.
     """
-    print(access_token)
-
     # API Endpoints
     space_usage_url = "https://api.box.com/2.0/users/me"
     list_folder_url = "https://api.box.com/2.0/folders/0/items"
@@ -149,94 +158,35 @@ async def get_box_data_for_list(access_token: str) -> dict:
     }
 
     try:
-        print("Fetching space usage data from Box...")  # Logging space usage request
+        # Fetch space usage data
         space_usage_response = requests.get(space_usage_url, headers=headers)
-        print(f"Space usage data response: {space_usage_response}")
+        if space_usage_response.status_code != 200:
+            raise HTTPException(status_code=400,
+                                detail=f"Failed to fetch storage data from Box: {space_usage_response.text}")
 
-        if not space_usage_response.text.strip():
-            print("Received empty or None response for space usage data. Defaulting to 0.")
-            used_storage = total_storage = remaining_storage = 0
-        elif space_usage_response.status_code != 200:
-            raise Exception(f"Failed to fetch storage data from Box: {space_usage_response.text}")
-        else:
-            print("Successfully fetched space usage data.")  # Success log
-            try:
-                storage_data = space_usage_response.json()
-                used_storage = storage_data.get('space_used', 0)
-                total_storage = storage_data.get('space_amount', 0)
-                remaining_storage = total_storage - used_storage
-            except (ValueError, KeyError) as e:
-                print(f"Error parsing space usage data: {str(e)}. Defaulting to 0.")
-                used_storage = total_storage = remaining_storage = 0
+        space_usage_data = space_usage_response.json()
+        used_storage = space_usage_data.get('space_used', 0)
+        total_storage = space_usage_data.get('space_amount', 0)
+        remaining_storage = total_storage - used_storage if total_storage else "Unlimited"
 
-        print(f"Used storage: {used_storage}, Total storage: {total_storage}, Remaining storage: {remaining_storage}")  # Log space usage
+        # Fetch folder structure
+        folder_structure = await get_folder_structure(headers)
 
-        file_count = 0
-        largest_file = None
-        largest_file_size = 0
-        oldest_file = None
-        oldest_file_time = None
-        duplicates = {}
-        file_types = {}  # Dictionary to store file types
+        # Process file metadata from folder structure
+        file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types = await traverse_folders(
+            folder_structure
+        )
 
-        print("Fetching file metadata from Box...")  # Logging file metadata request
-        # Get file metadata (recursive request to get all files)
-        file_metadata_response = requests.get(list_folder_url, headers=headers, params={"fields": "id,name,size,created_at", "limit": 1000})
+        # Calculate duplicate information
+        duplicate_count = sum(len(files) for files in duplicates.values() if len(files) > 1)
+        storage_used_by_duplicates = sum(
+            int(file.get("size", 0)) for files in duplicates.values() if len(files) > 1 for file in files
+        )
 
-        if not file_metadata_response.text.strip():
-            print("Received empty or None response for file metadata. Defaulting to empty file list.")
-            files = []
-        elif file_metadata_response.status_code != 200:
-            raise Exception(f"Failed to fetch file metadata from Box: {file_metadata_response.text}")
-        else:
-            print("Successfully fetched file metadata.")  # Success log
-            try:
-                files = [entry for entry in file_metadata_response.json().get('entries', []) if entry.get('type') == 'file']
-            except ValueError as e:
-                print(f"Error parsing file metadata: {str(e)}. Defaulting to empty file list.")
-                files = []
-
-        print(f"Found {len(files)} files.")  # Log file count
-
-        if files:
-            for entry in files:
-                file_name = entry.get('name', '')
-                file_size = entry.get('size', 0)
-                created_at = entry.get('created_at', '')
-
-                file_count += 1
-
-                # Count file types based on extension
-                file_extension = os.path.splitext(file_name)[1].lower()
-                if file_extension:
-                    file_types[file_extension] = file_types.get(file_extension, 0) + 1
-
-                if file_size > largest_file_size:
-                    largest_file = entry
-                    largest_file_size = file_size
-
-                if not oldest_file_time or created_at < oldest_file_time:
-                    oldest_file = entry
-                    oldest_file_time = created_at
-
-                if file_name in duplicates:
-                    duplicates[file_name].append(entry)
-                else:
-                    duplicates[file_name] = [entry]
-
-                # Log progress for every file processed
-                print(f"Processing file: {file_name}, Size: {file_size}, Created at: {created_at}")
-
-        # Log duplicate details
-        duplicate_count = sum(len(duplicate_files) for duplicate_files in duplicates.values() if len(duplicate_files) > 1)
-        storage_used_by_duplicates = sum(file.get('size', 0) for duplicate_files in duplicates.values() if len(duplicate_files) > 1 for file in duplicate_files)
-        print(f"Found {duplicate_count} duplicates, taking up {storage_used_by_duplicates} bytes of storage.")  # Log duplicates
-
-        # Prepare final response
         data = {
             "storage": {
                 "used_storage": used_storage,
-                "total_storage": total_storage,
+                "total_storage": total_storage if total_storage else "Unlimited",
                 "remaining_storage": remaining_storage
             },
             "file_metadata": {
@@ -257,20 +207,112 @@ async def get_box_data_for_list(access_token: str) -> dict:
             "sync_info": {
                 "last_synced": oldest_file_time if oldest_file else 'N/A'
             },
-            "file_types": file_types  # Add file types count here
+            "file_types": file_types,  # Add file types count here
+            "folder_structure": folder_structure
         }
 
-        # Logging the structured data going into the response
-        print("Preparing final response:")
-        print(f"Storage: {data['storage']}")
-        print(f"File Metadata: {data['file_metadata']}")
-        print(f"Duplicates: {data['duplicates']}")
-        print(f"Sync Info: {data['sync_info']}")
-        print(f"File Types: {data['file_types']}")  # Log file types
-
-        print("Data successfully fetched and structured.")  # Success log
         return data
 
     except Exception as e:
-        print(f"Error: {str(e)}")  # Log error
-        raise Exception(f"Error fetching data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching Box data: {str(e)}")
+
+
+async def get_folder_structure(headers: dict, parent_id: str = '0') -> list:
+    """
+    Recursively fetches the folder structure from Box starting at the given parent ID.
+    """
+    folders = []
+    list_folder_url = f"https://api.box.com/2.0/folders/{parent_id}/items"
+
+    params = {
+        "fields": "id,name,type,created_at,size",
+        "limit": 1000  # Adjust as needed
+    }
+
+    response = requests.get(list_folder_url, headers=headers, params=params)
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=400, detail=f"Failed to fetch folder data from Box: {response.text}")
+
+    items = response.json().get("entries", [])
+
+    for item in items:
+        if item["type"] == "folder":
+            # If item is a folder, recursively fetch its structure
+            folder = {
+                "name": item["name"],
+                "type": "folder",
+                "path": item["id"],
+                "children": await get_folder_structure(headers, item["id"])
+            }
+            folders.append(folder)
+        elif item["type"] == "file":
+            # If item is a file, add it directly
+            file = {
+                "name": item["name"],
+                "type": "file",
+                "path": item["id"],
+                "size": item.get("size", 0),
+                "created_at": item.get("created_at", ''),
+            }
+            folders.append(file)
+
+    return folders
+
+
+async def traverse_folders(folders: list) -> tuple:
+    """
+    Traverse through the folder structure recursively and process file metadata.
+    """
+    file_count = 0
+    largest_file = None
+    largest_file_size = 0
+    oldest_file = None
+    oldest_file_time = None
+    duplicates = {}
+    file_types = {}
+
+    for folder in folders:
+        if folder['type'] == 'file':
+            file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types = process_file_metadata(
+                folder, file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates,
+                file_types
+            )
+        elif folder['type'] == 'folder':
+            file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types = await traverse_folders(
+                folder.get('children', [])
+            )
+
+    return file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types
+
+
+def process_file_metadata(entry, file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates,
+                          file_types):
+    """
+    Process file metadata and update file-related statistics.
+    """
+    file_name = entry.get('name', '')
+    file_size = entry.get('size', 0)
+    created_at = entry.get('created_at', '')
+
+    file_count += 1
+
+    # Count file types based on extension
+    file_extension = os.path.splitext(file_name)[1].lower()
+    if file_extension:
+        file_types[file_extension] = file_types.get(file_extension, 0) + 1
+
+    if file_size > largest_file_size:
+        largest_file = entry
+        largest_file_size = file_size
+
+    if not oldest_file_time or created_at < oldest_file_time:
+        oldest_file = entry
+        oldest_file_time = created_at
+
+    if file_name in duplicates:
+        duplicates[file_name].append(entry)
+    else:
+        duplicates[file_name] = [entry]
+
+    return file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types

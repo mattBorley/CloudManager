@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useGraphData } from "./GetData";  // Import custom hook for context
 import { interpolateColor } from "./GraphCommonElements";
-import {formatStorageSize} from "../Tabs";  // Assuming this is a custom function for color interpolation
+import { formatStorageSize } from "../Tabs";  // Assuming this is a custom function for color interpolation
 
 const MyPieChart = () => {
   const { used_storage, remaining_storage } = useGraphData();
@@ -34,18 +34,44 @@ const MyPieChart = () => {
         labelLine={false}
         label={false}
       >
-        {chartData.map((entry, index) => (
-          <Cell
-            key={`cell-${index}`}
-            fill={"#2e2e2e"}  // Fill color of the slice
-            stroke={interpolateColor(entry.value, minValue, maxValue)} // Stroke (border) color
-            strokeWidth={4}
-            strokeLinejoin="round"
-          />
-        ))}
+        {chartData.map((entry, index) => {
+          const strokeColor = interpolateColor(entry.value, minValue, maxValue); // Calculate stroke color
+          return (
+            <Cell
+              key={`cell-${index}`}
+              fill={"#2e2e2e"}  // Fill color of the slice
+              stroke={strokeColor} // Stroke (border) color
+              strokeWidth={4}
+              strokeLinejoin="round"
+            />
+          );
+        })}
       </Pie>
 
-      <Tooltip />
+      <Tooltip
+        content={({ active, payload }) => {
+          if (active && payload && payload.length) {
+            const data = payload[0];
+            return (
+              <div
+                style={{
+                  background: "#333",
+                  padding: "8px 12px",
+                  borderRadius: 6,
+                  color: "white",
+                  fontWeight: "bold",
+                  fontSize: 14,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+                }}
+              >
+                <div>{data.name}</div>
+                <div>{formatStorageSize(data.value)}</div>
+              </div>
+            );
+          }
+          return null;
+        }}
+      />
 
       <Legend
         iconType="circle"  // Change the legend icon type to a circle
@@ -60,11 +86,14 @@ const MyPieChart = () => {
             {value}
           </span>
         )}
-        payload={chartData.map((entry, index) => ({
-          value: entry.name,
-          type: "circle",
-          color: interpolateColor(entry.value, formatStorageSize(minValue), formatStorageSize(maxValue)),
-        }))}
+        payload={chartData.map((entry, index) => {
+          const strokeColor = interpolateColor(entry.value, minValue, maxValue); // Get the stroke color
+          return {
+            value: entry.name,
+            type: "circle",
+            color: strokeColor, // Use stroke color for the legend
+          };
+        })}
       />
 
       <text

@@ -7,8 +7,8 @@ from urllib.parse import urlparse, parse_qsl, urlencode
 import dropbox
 import httpx
 import requests
-
-from .dropbox_database import get_dropbox_accounts
+import os
+from .dropbox_database import get_dropbox_accounts, remove_from_dropbox_table
 from .user_models import get_user_id
 
 try:
@@ -112,7 +112,6 @@ class DropboxClass(OAuthBase):
                 "cloud_name": account.get("name") + " (Dropbox)",
                 "cloud_data": data
             }
-            print(dropbox_data)
             dropbox_clouds.append(dropbox_data)
         return dropbox_clouds
 
@@ -141,40 +140,133 @@ async def dropbox_store_credentials(local_access_token: str, refresh_token: str,
         logging.error(f"Error storing credentials for user {user_id} in cloud {cloud_name}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-import os
+async def remove_dropbox_account(cloud_name, local_access_token):
+    """
+    Removes account from the database and logs key actions.
+    """
+
+    try:
+        payload = get_payload_from_access(local_access_token)
+
+        user_email = payload.get("sub")
+
+        local_user_id = get_user_id(user_email)
+
+        remove_from_dropbox_table(local_user_id, cloud_name[:-10])
+
+    except Exception as e:
+        print(f"Error occurred during dropbox account removal: {e}")
+
+
+
+async def get_folder_structure(path: str, headers: dict) -> list:
+    """
+    Recursively fetches the folder structure from Dropbox, starting at the given path.
+    """
+    folder_structure = []
+    params = {"path": path}
+    while True:
+        response = requests.post("https://api.dropboxapi.com/2/files/list_folder", headers=headers, json=params)
+        if response.status_code != 200:
+            raise Exception(f"Failed to fetch folder data from Dropbox: {response.text}")
+
+        data = response.json()
+        entries = data.get('entries', [])
+
+        for entry in entries:
+            if entry['.tag'] == 'folder':
+                children = await get_folder_structure(entry['path_display'], headers)
+                folder_structure.append({
+                    'name': entry['name'],
+                    'type': 'folder',
+                    'path': entry['path_display'],
+                    'children': children
+                })
+            elif entry['.tag'] == 'file':
+                folder_structure.append({
+                    'name': entry['name'],
+                    'type': 'file',
+                    'path': entry['path_display'],
+                    'size': entry.get('size', 0),
+                    'client_modified': entry.get('client_modified', ''),
+                })
+
+        if not data.get('has_more', False):
+            break
+
+        params = {"cursor": data.get('cursor')}
+
+    return folder_structure
+
+def process_file_metadata(entry, file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types):
+    """
+    Process file metadata and update file-related statistics.
+    """
+    file_name = entry.get('name', '')
+    file_size = entry.get('size', 0)
+    client_modified = entry.get('client_modified', '')
+
+    file_count += 1
+
+    file_extension = os.path.splitext(file_name)[1].lower()
+    if file_extension:
+        file_types[file_extension] = file_types.get(file_extension, 0) + 1
+
+    if file_size > largest_file_size:
+        largest_file = entry
+        largest_file_size = file_size
+
+    if not oldest_file_time or client_modified < oldest_file_time:
+        oldest_file = entry
+        oldest_file_time = client_modified
+
+    if file_name in duplicates:
+        duplicates[file_name].append(entry)
+    else:
+        duplicates[file_name] = [entry]
+
+    return file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types
+
+async def traverse_folders(folders, process_file_metadata, file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types):
+    """
+    Traverse through the folder structure recursively and process file metadata.
+    """
+    for folder in folders:
+        if folder['type'] == 'file':
+            file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types = process_file_metadata(
+                folder, file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types
+            )
+        elif folder['type'] == 'folder':
+            file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types = await traverse_folders(
+                folder.get('children', []), process_file_metadata, file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types
+            )
+
+    return file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types
 
 async def get_dropbox_data_for_list(access_token: str) -> dict:
     """
     Uses the access token to gather Dropbox account data and file metadata,
-    returning a structured response for frontend consumption.
+    returning a structured response for frontend consumption, including the folder structure.
     """
-    # API Endpoints
     space_usage_url = "https://api.dropboxapi.com/2/users/get_space_usage"
-    list_folder_url = "https://api.dropboxapi.com/2/files/list_folder"
-
     headers = {
         "Authorization": f"Bearer {access_token}",
     }
 
     try:
         space_usage_response = requests.post(space_usage_url, headers=headers)
-
         if not space_usage_response.text.strip():
             raise Exception("Received empty or None response for space usage data")
 
         if space_usage_response.status_code != 200:
             raise Exception(f"Failed to fetch storage data from Dropbox: {space_usage_response.text}")
 
-        try:
-            storage_data = space_usage_response.json()
-            if not storage_data:
-                raise ValueError("No data in response for space usage.")
-        except ValueError as e:
-            raise Exception("Failed to parse storage data from Dropbox.")
-
+        storage_data = space_usage_response.json()
         used_storage = storage_data.get('used', 0)
         total_storage = storage_data.get('allocation', {}).get('allocated', 0)
         remaining_storage = total_storage - used_storage
+
+        folder_structure = await get_folder_structure("", headers)
 
         file_count = 0
         largest_file = None
@@ -184,47 +276,12 @@ async def get_dropbox_data_for_list(access_token: str) -> dict:
         duplicates = {}
         file_types = {}
 
-        file_metadata_response = requests.post(list_folder_url, headers=headers, json={"path": "", "recursive": True})
+        file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types = await traverse_folders(
+            folder_structure, process_file_metadata, file_count, largest_file, largest_file_size, oldest_file, oldest_file_time, duplicates, file_types
+        )
 
-        if not file_metadata_response.text.strip():
-            raise Exception("Received empty or None response for file metadata")
-
-        if file_metadata_response.status_code != 200:
-            raise Exception(f"Failed to fetch file metadata from Dropbox: {file_metadata_response.text}")
-
-        try:
-            files = [entry for entry in file_metadata_response.json().get('entries', []) if entry.get('.tag') == 'file']
-        except ValueError as e:
-            raise Exception("Failed to parse file metadata from Dropbox.")
-
-        if files:
-            for entry in files:
-                file_name = entry.get('name', '')
-                file_size = entry.get('size', 0)
-                client_modified = entry.get('client_modified', '')
-
-                file_count += 1
-
-                # Count file types based on extension
-                file_extension = os.path.splitext(file_name)[1].lower()
-                if file_extension:
-                    file_types[file_extension] = file_types.get(file_extension, 0) + 1
-
-                if file_size > largest_file_size:
-                    largest_file = entry
-                    largest_file_size = file_size
-
-                if not oldest_file_time or client_modified < oldest_file_time:
-                    oldest_file = entry
-                    oldest_file_time = client_modified
-
-                if file_name in duplicates:
-                    duplicates[file_name].append(entry)
-                else:
-                    duplicates[file_name] = [entry]
-
-        duplicate_count = sum(len(duplicate_files) for duplicate_files in duplicates.values() if len(duplicate_files) > 1)
-        storage_used_by_duplicates = sum(file.get('size', 0) for duplicate_files in duplicates.values() if len(duplicate_files) > 1 for file in duplicate_files)
+        duplicate_count = sum(len(dupes) for dupes in duplicates.values() if len(dupes) > 1)
+        storage_used_by_duplicates = sum(file.get('size', 0) for dupes in duplicates.values() if len(dupes) > 1 for file in dupes)
 
         data = {
             "storage": {
@@ -250,11 +307,12 @@ async def get_dropbox_data_for_list(access_token: str) -> dict:
             "sync_info": {
                 "last_synced": oldest_file_time if oldest_file else 'N/A'
             },
-            "file_types": file_types  # Add file types count here
+            "file_types": file_types,
+            "folder_structure": folder_structure
         }
+
         return data
 
     except Exception as e:
+        print(f"An error occurred: {str(e)}")
         raise Exception(f"Error fetching data: {str(e)}")
-
-

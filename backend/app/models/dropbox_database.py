@@ -71,5 +71,33 @@ def get_dropbox_accounts(local_user_id):
             connection.close()
 
 
+def remove_from_dropbox_table(local_user_id, name):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        query = """
+            DELETE FROM dropbox_accounts
+            WHERE local_user_id = %s AND name = %s
+        """
+
+        cursor.execute(query, (local_user_id, name))
+        connection.commit()
+
+    except Error as e:
+        print(f"❌ Error occurred during removal: {e}")
+
+    finally:
+        if cursor:
+            print("Closing cursor...")
+            cursor.close()
+        if connection:
+            print("Closing database connection...")
+            connection.close()
+
+
+
+
+
 
 

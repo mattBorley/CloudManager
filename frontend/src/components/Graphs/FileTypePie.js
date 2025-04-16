@@ -54,8 +54,8 @@ const FileTypePie = () => {
             <Cell
               key={`cell-${index}`}
               fill={dynamicColor}
-              stroke={dynamicColor}
-              strokeWidth={4}
+              stroke={"#ffffff"}
+              strokeWidth={1}
               strokeLinejoin="round"
             />
           );

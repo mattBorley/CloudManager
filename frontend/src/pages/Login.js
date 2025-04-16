@@ -20,77 +20,103 @@ function Login() {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        const backend_url = process.env.REACT_APP_BACKEND_URL;
+
+        console.log("🔐 Login attempt started");
+        console.log("📧 Email entered:", email);
 
         if (email === "" && password === "") {
+            console.warn("⚠️ Both email and password are empty");
             setErrorMessage("Please enter your credentials.");
-        } else if (email === "" || !isValidEmail(email)){
+        } else if (email === "" || !isValidEmail(email)) {
+            console.warn("⚠️ Invalid email format");
             setErrorMessage("Please enter valid email.");
         } else if (password === "") {
+            console.warn("⚠️ Password field is empty");
             setErrorMessage("Please enter your password.");
         } else {
+            console.log("🔑 All credentials provided. Proceeding...");
+
 
             const userLoggingIn = {
                 email,
-                password
+                password,
             };
 
-            try {
-                const accessResponse = await axios.post('http://localhost:8000/api/users/login', userLoggingIn, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    withCredentials: true,
-                });
+            console.log("📤 Sending login request to:", `${backend_url}/api/users/login`);
 
-                console.log("Response Status:", accessResponse.status);
-                console.log("Response Status Text:", accessResponse.statusText);
+            try {
+                const accessResponse = await axios.post(
+                    backend_url + '/api/users/login',
+                    userLoggingIn,
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        withCredentials: true,
+                    }
+                );
+
+                console.log("✅ Response Status:", accessResponse.status);
+                console.log("✅ Response Text:", accessResponse.statusText);
 
                 const data = accessResponse.data;
-
-                console.log("Response Data: ", data)
+                console.log("📦 Response Data:", data);
 
                 if (accessResponse.status === 200 && data.success) {
-
                     const { access_token, refresh_token } = data;
 
                     localStorage.setItem('accessToken', access_token);
-                    console.log("Access Token: " + access_token)
+                    console.log("🔐 Access Token stored");
+
                     localStorage.setItem('refreshToken', refresh_token);
-                    console.log("Refresh Token: " + refresh_token)
+                    console.log("🔄 Refresh Token stored");
 
-                    const csrfResponse = await axios.get(
-                        "api/tokens/get_csrf_token",
-                        {
-                            withCredentials: true
-                        }
-                    );
+                    // Optional CSRF token request (currently commented out)
+                    // console.log("🛡 Requesting CSRF token...");
+                    // const csrfResponse = await axios.get(
+                    //     backend_url + "api/tokens/get_csrf_token",
+                    //     { withCredentials: true }
+                    // );
+                    //
+                    // if (!(csrfResponse.data && csrfResponse.data.csrf_token)) {
+                    //     console.error("❌ CSRF token not found");
+                    //     setErrorMessage("CSRF Token not generated");
+                    //     throw new Error("CSRF token not found in response");
+                    // }
 
-                    if (!(csrfResponse.data && csrfResponse.data.csrf_token)) {
-                        setErrorMessage("CSRF Token not generated");
-                        throw new Error("CSRF token not found in response");
-                    }
-
+                    console.log("🎉 Login successful. Redirecting to /main");
                     navigate("/main");
                 } else {
-                    setErrorMessage(typeof data.detail === 'string' ? data.detail : 'Error connecting to the server 2.');
+                    console.warn("⚠️ Login failed:", data);
+                    setErrorMessage(
+                        typeof data.detail === 'string'
+                            ? data.detail
+                            : 'Error connecting to the server 2.'
+                    );
                 }
             } catch (error) {
+                console.error("🚨 Login request failed");
+
                 if (error.response) {
                     // Server responded with a status outside the 2xx range
-                    console.error('Response Error:', error.response);
-                    console.error('Status Code:', error.response.status);
-                    console.error('Response Data:', error.response.data);
+                    console.error("❌ Server Response Error:");
+                    console.error("Status Code:", error.response.status);
+                    console.error("Response Data:", error.response.data);
                 } else if (error.request) {
                     // The request was made but no response was received
-                    console.error('Request Error:', error.request);
+                    console.error("❌ No response received from server");
+                    console.error("Request Error:", error.request);
                 } else {
                     // Something else went wrong
-                    console.error('Axios Error:', error.message);
-  }
+                    console.error("❌ Axios Error:", error.message);
+                }
+
                 setErrorMessage('Error connecting to the server.');
             }
         }
     };
+
 
     const toSignUp = () => {
         navigate("/signup")
@@ -153,7 +179,7 @@ function Login() {
                         <FormLabel fontSize={"18px"} color={"white"}>
                             Email
                         </FormLabel>
-                        <Input type={"email"} placeholder={"Enter your email"} width={"500px"} onChange={handleEmailChange}/>
+                        <Input type={"email"} placeholder={"Enter your email"} width={"500px"} color={"white"} onChange={handleEmailChange}/>
                     </FormControl>
                     <FormControl id={"password"} isRequired mb={6}>
                         <FormLabel fontSize={"18px"} color={"white"}>
@@ -165,6 +191,7 @@ function Login() {
                             placeholder={"Enter your password"}
                             pr={20}
                             onChange={handlePasswordChange}
+                            color={"white"}
                           />
                           <InputRightElement width="4.5rem">
                             <Button

@@ -15,13 +15,14 @@ import {
 import {useNavigate} from "react-router-dom";
 import axios from "axios";
 import "../styling/addCloud.css";
-import {useGoogleLogin} from "@react-oauth/google";
+import {useGoogleLogin, useGoogleOAuth} from "@react-oauth/google";
 
 function AddCloud() {
     const navigate = useNavigate();
     const [cloudName, setCloudName] = useState(); // Get context methods and values
     const [selectedCloud, setSelectedCloud] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
+    const backend_url = process.env.REACT_APP_BACKEND_URL
 
     const handleNameChange = (event) => {
         setCloudName(event.target.value);
@@ -30,7 +31,7 @@ function AddCloud() {
     async function dropbox_oauth_logic() {
         try {
             console.log(cloudName);
-            const response = await axios.get("http://localhost:8000/api/dropbox/authorization", {
+            const response = await axios.get(backend_url+"/api/dropbox/authorization", {
                 withCredentials: true,
             });
             localStorage.setItem("cloudName", cloudName);
@@ -40,7 +41,7 @@ function AddCloud() {
         }
     }
 
-    const google_oauth_logic = useGoogleLogin(
+    const google_oauth_logic =  useGoogleLogin(
         {
             flow: "auth-code",
             onSuccess: async (response) => {
@@ -56,8 +57,10 @@ function AddCloud() {
 
                     console.log("Sending request to backend with code:", response.code, "and cloud_name:", cloudName);
 
-                    const apiResponse = await axios.get("http://localhost:8000/api/google/callback", {
-                        params: { code: response.code, cloud_name: cloudName },
+                    const apiResponse = await axios.post(backend_url+"/api/google/callback", {
+                        code: response.code,
+                        cloud_name: cloudName
+                        }, {
                         headers: { Authorization: `Bearer ${accessToken}` },
                         withCredentials: true,
                     });
@@ -74,15 +77,33 @@ function AddCloud() {
             onError: (error) => {
                 console.error("Login failed:", error);
             },
+            redirect_uri: process.env.REACT_APP_GOOGLE_REDIRECT_URI,
             scope: "https://www.googleapis.com/auth/drive.metadata.readonly email profile",
-            redirect_uri: process.env.GOOGLE_REDIRECT_URI
+
+            // try {
+            //     console.log(cloudName);
+            //
+            //     // Construct Google OAuth URL
+            //     const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+            //     const redirectUri = process.env.REACT_APP_GOOGLE_REDIRECT_URI;
+            //     const scope = 'https://www.googleapis.com/auth/drive.metadata.readonly email profile';
+            //     const responseType = 'code';
+            //
+            //     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}`;
+            //
+            //     localStorage.setItem('cloudName', cloudName);
+            //
+            //     window.location.href = authUrl;
+            // } catch (error) {
+            //     console.error("Error initiating Google OAuth: ", error);
+            // }
         }
-    );
+    )
 
     const box_oauth_logic = async () => {
         console.log("Initiating Box OAuth.")
         try {
-            const response = await axios.get("http://localhost:8000/api/box/authorization", {
+            const response = await axios.get(backend_url+"/api/box/authorization", {
                 withCredentials: true,
             });
             console.log("Response: ", response)

@@ -16,6 +16,7 @@ import DropboxCallback from "./pages/DropboxCallback";
 import BoxCallback from "./pages/BoxCallback";
 import {CloudProvider} from "./components/Cloud_Context";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import GoogleCallback from "./pages/GoogleCallback";
 
 const google_client_id = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
@@ -54,11 +55,11 @@ const App = () => {
                                         </ProtectedRouteFromLoggedIn>
                                     }/>
                                     <Route path="/main" element={
-                                        // <ProtectedRouteFromLoggedOut>
+                                        <ProtectedRouteFromLoggedOut>
                                             <PageTitle title={"Main - Cloud Storage Manager"}>
                                                 <Main/>
                                             </PageTitle>
-                                        // </ProtectedRouteFromLoggedOut>
+                                        </ProtectedRouteFromLoggedOut>
                                     }/>
                                     <Route path="/addcloud" element={
                                         <ProtectedRouteFromLoggedOut>

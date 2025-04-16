@@ -16,19 +16,21 @@ function SignUp() {
     const [errorMessage, setErrorMessage] = useState("");
 
 
-    const handleSignUp = async (e) => {
 
+    const handleSignUp = async (e) => {
         e.preventDefault();
+
+        const backend_url = process.env.REACT_APP_BACKEND_URL
 
         const newUser = {
             email,
             name,
             password,
-            confirm_password: confirmPassword
+            confirm_password: confirmPassword,
         };
 
         try {
-            const accessResponse = await axios.post('http://localhost:8000/api/users/signup', newUser, {
+            const accessResponse = await axios.post(backend_url+'/api/users/signup', newUser, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -51,15 +53,15 @@ function SignUp() {
                 localStorage.setItem('refreshToken', refresh_token);
                 console.log("Refresh token: " + refresh_token)
 
-                const csrfResponse = await axios.get(
-                    "api/tokens/get_csrf_token",
-                    { withCredentials: true }
-                );
-
-                if (!(csrfResponse.data && csrfResponse.data.csrf_token)) {
-                    setErrorMessage("CSRF Token not generated");
-                    throw new Error("CSRF token not found in response");
-                }
+                // const csrfResponse = await axios.get(
+                //     backend_url+"api/tokens/get_csrf_token",
+                //     { withCredentials: true }
+                // );
+                //
+                // if (!(csrfResponse.data && csrfResponse.data.csrf_token)) {
+                //     setErrorMessage("CSRF Token not generated");
+                //     throw new Error("CSRF token not found in response");
+                // }
 
                 navigate("/main");
             } else {
@@ -162,13 +164,13 @@ function SignUp() {
                         <FormLabel fontSize={"18px"} color={"white"}>
                             Email
                         </FormLabel>
-                        <Input type={"email"} placeholder={"Enter your email"} width={"500px"} onChange={handleEmailChange}/>
+                        <Input type={"email"} placeholder={"Enter your email"} width={"500px"} color={"white"} onChange={handleEmailChange}/>
                     </FormControl>
                     <FormControl id={"userName"} isRequired>
                         <FormLabel fontSize={"18px"} color={"white"}>
                             Name
                         </FormLabel>
-                        <Input type={"email"} placeholder={"Enter your name"} width={"500px"} onChange={handleNameChange}/>
+                        <Input placeholder={"Enter your name"} width={"500px"} color={"white"} onChange={handleNameChange}/>
                     </FormControl>
                     <FormControl id={"password"} isRequired mb={4}>
                         <FormLabel fontSize={"18px"} color={"white"}>
@@ -180,6 +182,7 @@ function SignUp() {
                             placeholder={"Enter your password"}
                             onChange={handlePasswordChange}
                             pr={20}
+                            color={"white"}
                           />
                           <InputRightElement width="4.5rem">
                             <Button
@@ -211,6 +214,7 @@ function SignUp() {
                             value={confirmPassword}
                             onChange={handleConfirmPasswordChange}
                             pr={20}
+                            color={"white"}
                           />
                           <InputRightElement width="4.5rem">
                             <Button
