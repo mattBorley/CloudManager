@@ -45,32 +45,23 @@ async def callback(request: Request):
     Exchanges the authorization code for an access token and refresh token.
     """
     try:
-        print("Received callback request.")
 
         local_access_token = check_header(request.headers.get("Authorization"))
-        print(f"Extracted local access token: {local_access_token}")
 
         code = request.query_params.get("code")
-
-
         if not code:
             print("Authorization code missing.")
             raise HTTPException(status_code=400, detail="Authorization code missing.")
 
-        print(f"Extracted authorization code: {code}")
 
         cloud_name = request.query_params.get("cloud_name")
-        print(f"Extracted cloud_name: {cloud_name}")
-
         if not cloud_name:
             print("Missing query parameter 'cloud_name'.")
             raise HTTPException(status_code=400, detail="Missing query parameter 'cloud_name'")
 
         tokens = await box_class.exchange_code_for_token(code)
-        print(f"Received tokens: {tokens}")
 
         await box_store_credentials(local_access_token, tokens.get("refresh_token"), cloud_name)
-        print("Stored credentials successfully.")
 
         return JSONResponse(status_code=200, content={"Success": True})
 

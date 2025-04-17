@@ -46,17 +46,10 @@ function AddCloud() {
             flow: "auth-code",
             onSuccess: async (response) => {
                 try {
-                    console.log("OAuth response received:", response);
-
                     const accessToken = localStorage.getItem("accessToken");
                     if (!accessToken) {
-                        console.error("No access token found in localStorage.");
                         throw new Error("Access token not found");
                     }
-                    console.log("Access token found:", accessToken);
-
-                    console.log("Sending request to backend with code:", response.code, "and cloud_name:", cloudName);
-
                     const apiResponse = await axios.post(backend_url+"/api/google/callback", {
                         code: response.code,
                         cloud_name: cloudName
@@ -64,9 +57,6 @@ function AddCloud() {
                         headers: { Authorization: `Bearer ${accessToken}` },
                         withCredentials: true,
                     });
-
-                    console.log("API Response:", apiResponse.data);
-
                 } catch (error) {
                     console.error("Error during Google login process:", error);
                     if (error.response) {
@@ -79,34 +69,14 @@ function AddCloud() {
             },
             redirect_uri: process.env.REACT_APP_GOOGLE_REDIRECT_URI,
             scope: "https://www.googleapis.com/auth/drive.metadata.readonly email profile",
-
-            // try {
-            //     console.log(cloudName);
-            //
-            //     // Construct Google OAuth URL
-            //     const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-            //     const redirectUri = process.env.REACT_APP_GOOGLE_REDIRECT_URI;
-            //     const scope = 'https://www.googleapis.com/auth/drive.metadata.readonly email profile';
-            //     const responseType = 'code';
-            //
-            //     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}`;
-            //
-            //     localStorage.setItem('cloudName', cloudName);
-            //
-            //     window.location.href = authUrl;
-            // } catch (error) {
-            //     console.error("Error initiating Google OAuth: ", error);
-            // }
         }
     )
 
     const box_oauth_logic = async () => {
-        console.log("Initiating Box OAuth.")
         try {
             const response = await axios.get(backend_url+"/api/box/authorization", {
                 withCredentials: true,
             });
-            console.log("Response: ", response)
             localStorage.setItem("cloudName", cloudName);
             window.location.href = response.data.auth_url; // Redirect user to Box OAuth URL
         } catch (error) {
@@ -177,7 +147,7 @@ function AddCloud() {
                         Add Cloud Service
                     </Heading>
                     <FormControl id={"cloudService"} isRequired>
-                        <FormControl fontSize={"18px"} color={"white"}>
+                        <FormControl role={"Select Cloud"} fontSize={"18px"} color={"white"}>
                             Select Cloud <span style={{color: "#e74b4b"}}>*</span>
                         </FormControl>
                         <Select

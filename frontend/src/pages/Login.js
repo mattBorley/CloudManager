@@ -22,28 +22,20 @@ function Login() {
         e.preventDefault();
         const backend_url = process.env.REACT_APP_BACKEND_URL;
 
-        console.log("🔐 Login attempt started");
-        console.log("📧 Email entered:", email);
-
         if (email === "" && password === "") {
-            console.warn("⚠️ Both email and password are empty");
             setErrorMessage("Please enter your credentials.");
         } else if (email === "" || !isValidEmail(email)) {
-            console.warn("⚠️ Invalid email format");
             setErrorMessage("Please enter valid email.");
         } else if (password === "") {
-            console.warn("⚠️ Password field is empty");
             setErrorMessage("Please enter your password.");
         } else {
-            console.log("🔑 All credentials provided. Proceeding...");
+            console.log("All credentials provided. Proceeding...");
 
 
             const userLoggingIn = {
                 email,
                 password,
             };
-
-            console.log("📤 Sending login request to:", `${backend_url}/api/users/login`);
 
             try {
                 const accessResponse = await axios.post(
@@ -57,38 +49,16 @@ function Login() {
                     }
                 );
 
-                console.log("✅ Response Status:", accessResponse.status);
-                console.log("✅ Response Text:", accessResponse.statusText);
-
                 const data = accessResponse.data;
-                console.log("📦 Response Data:", data);
 
                 if (accessResponse.status === 200 && data.success) {
                     const { access_token, refresh_token } = data;
 
                     localStorage.setItem('accessToken', access_token);
-                    console.log("🔐 Access Token stored");
-
                     localStorage.setItem('refreshToken', refresh_token);
-                    console.log("🔄 Refresh Token stored");
 
-                    // Optional CSRF token request (currently commented out)
-                    // console.log("🛡 Requesting CSRF token...");
-                    // const csrfResponse = await axios.get(
-                    //     backend_url + "api/tokens/get_csrf_token",
-                    //     { withCredentials: true }
-                    // );
-                    //
-                    // if (!(csrfResponse.data && csrfResponse.data.csrf_token)) {
-                    //     console.error("❌ CSRF token not found");
-                    //     setErrorMessage("CSRF Token not generated");
-                    //     throw new Error("CSRF token not found in response");
-                    // }
-
-                    console.log("🎉 Login successful. Redirecting to /main");
                     navigate("/main");
                 } else {
-                    console.warn("⚠️ Login failed:", data);
                     setErrorMessage(
                         typeof data.detail === 'string'
                             ? data.detail
@@ -96,20 +66,16 @@ function Login() {
                     );
                 }
             } catch (error) {
-                console.error("🚨 Login request failed");
-
                 if (error.response) {
                     // Server responded with a status outside the 2xx range
-                    console.error("❌ Server Response Error:");
+                    console.error("Server Response Error:");
                     console.error("Status Code:", error.response.status);
                     console.error("Response Data:", error.response.data);
                 } else if (error.request) {
-                    // The request was made but no response was received
-                    console.error("❌ No response received from server");
+                    console.error("No response received from server");
                     console.error("Request Error:", error.request);
                 } else {
-                    // Something else went wrong
-                    console.error("❌ Axios Error:", error.message);
+                    console.error("Axios Error:", error.message);
                 }
 
                 setErrorMessage('Error connecting to the server.');

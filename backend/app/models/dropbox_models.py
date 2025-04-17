@@ -69,17 +69,14 @@ class DropboxClass(OAuthBase):
         """
         Complete the Dropbox OAuth flow and retrieve access & refresh tokens.
         """
-        print("Starting OAuth flow completion...")
         flow = self.create_flow(session)
 
         try:
-            print("Finishing OAuth flow with provided query parameters...")
             oauth_result = flow.finish(query_params)
             access_token = oauth_result.access_token
             user_id = oauth_result.account_id
             refresh_token = getattr(oauth_result, "refresh_token", None)
 
-            print(f"OAuth flow completed successfully. User ID: {user_id}")
             return access_token, refresh_token, user_id
         except Exception as e:
             print(f"Error during OAuth flow: {str(e)}")

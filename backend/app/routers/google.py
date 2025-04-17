@@ -29,53 +29,31 @@ google_auth = GoogleClass(
 @router.post("/callback")
 async def google_oauth_callback(request: Request):
     try:
-        print(f"Google OAuth callback received. {request}")
 
         local_access_token = check_header(request.headers.get("Authorization"))
-        print(f"Authorization header found: {local_access_token is not None}")
-
         data = await request.json()
         code = data.get("code")
         cloud_name = data.get("cloud_name")
 
         if not code:
-            print("Missing authorization code.")
             raise HTTPException(status_code=400, detail="Missing auth code")
-        print(f"Received code: {code}")
-
         if not cloud_name:
-            print("Missing cloud_name parameter.")
             raise HTTPException(status_code=400, detail="Missing query parameter 'cloud_name'")
-        print(f"Received cloud_name: {cloud_name}")
 
-        # Exchange the code for a token
-        print("Exchanging code for token...")
         token_response = google_auth.exchange_code_for_token(code)
-        print(f"Token exchange response: {token_response}")
-
         if not token_response:
-            print("Token exchange failed.")
             raise HTTPException(status_code=400, detail="Invalid code")
 
         access_token = token_response.get("access_token")
         refresh_token = token_response.get("refresh_token")
 
         if not access_token:
-            print("Missing access token in response.")
             raise HTTPException(status_code=400, detail="Missing access token")
-        print(f"Access token received: {access_token}")
-
         if not refresh_token:
-            print("Missing refresh token in response.")
             raise HTTPException(status_code=400, detail="Missing refresh token")
-        print(f"Refresh token received: {refresh_token}")
 
-        # Store the credentials (could be a database or some external storage)
         await google_store_credentials(local_access_token, refresh_token, cloud_name)
-        print("Credentials stored successfully.")
 
-        # Log success and return response
-        print("Google authentication successful.")
         return JSONResponse(status_code=200, content={"Success": True})
 
     except Exception as e:

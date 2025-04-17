@@ -3,6 +3,7 @@ import Login from './Login';
 import '@testing-library/jest-dom'; // for the "toBeInTheDocument" matcher
 import { BrowserRouter as Router } from 'react-router-dom';
 import axios from 'axios';
+import React from "react";
 
 // Mocking the axios post method
 jest.mock('axios');

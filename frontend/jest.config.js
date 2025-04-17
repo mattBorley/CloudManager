@@ -11,6 +11,7 @@ module.exports = {
     "^.+\\.[jt]sx?$": "babel-jest",
   },
   transformIgnorePatterns: [
-    "node_modules/(?!(d3-scale|axios|@chakra-ui|@emotion|framer-motion)/)"
-  ],  // Include d3-scale explicitly
+    "node_modules/(?!(d3-|internmap|robust-predicates|axios|@chakra-ui|@emotion|framer-motion)/)"
+  ]
+
 };

@@ -3,12 +3,15 @@ from fastapi.testclient import TestClient
 
 # Attempt to import the FastAPI app
 try:
-    from backend.app.main import app
+    from ..main import app
     client = TestClient(app)  # Initialize the TestClient with the app if imported successfully
 except ModuleNotFoundError as e:
-    print(f"⚠️ WARNING: Failed to import app: {e}")
+    print(f"WARNING: Failed to import app: {e}")
     app = None
     client = None  # Ensure client is not initialized if the app is missing
+except ImportError:
+    from backend.app.main import app
+
 
 # Define your fixture for signup data
 @pytest.fixture

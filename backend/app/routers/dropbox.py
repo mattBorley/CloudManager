@@ -69,35 +69,26 @@ async def dropbox_callback(
     Handle Dropbox OAuth Callback with CSRF validation
     """
     try:
-        print("Received Dropbox OAuth callback request")
 
         local_access_token = check_header(request.headers.get("Authorization"))
-        print(f"Extracted local access token: {local_access_token}")
 
         code = request.query_params.get("code")
         if not code:
             print("Error: Missing auth code")
             raise HTTPException(status_code=400, detail="Missing auth code")
-
         state = request.query_params.get("state")
         if not state:
             print("Error: Missing query parameter 'state'")
             raise HTTPException(status_code=400, detail="Missing query parameter 'state'")
-
         cloud_name = request.query_params.get("cloud_name")
         if not cloud_name:
             print("Error: Missing query parameter 'cloud_name'")
             raise HTTPException(status_code=400, detail="Missing query parameter 'cloud_name'")
-
         query_params = dict(request.query_params)
-        print(f"Extracted query parameters: {query_params}")
 
-        print("Calling finish_auth()...")
         access_token, refresh_token, user_id = await dropbox_class.finish_auth(
             session=request.session, query_params=query_params
         )
-
-        print(f"OAuth result - Access Token: {access_token}, Refresh Token: {refresh_token}, User ID: {user_id}")
 
         if not access_token:
             print("Error: Missing access token")
@@ -109,10 +100,7 @@ async def dropbox_callback(
             print("Error: Missing user id")
             raise HTTPException(status_code=400, detail="Missing user id")
 
-        print("Storing credentials...")
         await dropbox_store_credentials(local_access_token, refresh_token, user_id, cloud_name)
-
-        print("Dropbox authentication successful!")
         return JSONResponse(status_code=200, content={"Success": True})
 
     except Exception as e:

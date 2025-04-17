@@ -32,35 +32,24 @@ class GoogleClass(OAuthBase):
             "grant_type": "authorization_code"
         }
 
-        print(f"➡️ Requesting token from Google OAuth endpoint: {self.TOKEN_URL}")
-        print(f"Payload: {data}")
-
         try:
             response = requests.post(self.TOKEN_URL, data=data)
         except requests.exceptions.RequestException as e:
-            print(f"❌ Network error during token exchange: {e}")
             raise HTTPException(status_code=500, detail="Network error during token exchange.")
 
-        print(f"✅ Response received. Status Code: {response.status_code}")
-        print(f"🔁 Raw Response Body: {response.text}")
-
         if response.status_code != 200:
-            print(f"❌ Token exchange failed. Status: {response.status_code}, Body: {response.text}")
             raise HTTPException(status_code=400, detail="Failed to exchange code for tokens.")
 
         try:
             token_data = response.json()
         except ValueError:
-            print("❌ Invalid JSON response from token endpoint.")
             raise HTTPException(status_code=500, detail="Invalid JSON from Google token exchange.")
 
         required_keys = ["access_token", "refresh_token", "id_token"]
         missing = [k for k in required_keys if k not in token_data]
         if missing:
-            print(f"❌ Missing fields in token response: {missing}")
             raise HTTPException(status_code=400, detail=f"Missing fields in token response: {', '.join(missing)}")
 
-        print("✅ Token exchange successful.")
         return {
             "access_token": token_data["access_token"],
             "refresh_token": token_data["refresh_token"],

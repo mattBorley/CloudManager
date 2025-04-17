@@ -29,7 +29,6 @@ class DropboxAccount(Base):
 def insert_into_dropbox_table(local_user_id, dropbox_user_id, refresh_token, name):
     try:
         connection = get_db_connection()  # Ensure this returns a MySQL connection instance
-
         cursor = connection.cursor(dictionary=True)
 
         query = """
@@ -40,10 +39,8 @@ def insert_into_dropbox_table(local_user_id, dropbox_user_id, refresh_token, nam
         cursor.execute(query, (dropbox_user_id, name, refresh_token, local_user_id))
         connection.commit()
     except Error as e:
-        # Catch any errors and log them with more details
         logging.error(f"Error occurred: {e}")
     finally:
-        # Ensure that the cursor and connection are closed, even if an error occurs
         if cursor:
             cursor.close()
         if connection:

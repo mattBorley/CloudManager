@@ -4,11 +4,17 @@ import AddCloud from "./AddCloud";  // Import the component
 import axios from "axios";
 import { BrowserRouter as Router } from "react-router-dom";  // To wrap the component in a Router for useNavigate
 import { GoogleOAuthProvider } from "@react-oauth/google";  // To wrap the component in the OAuth provider
+import React from "react";
+import '@testing-library/jest-dom';
+
 
 jest.mock("axios");  // Mocking axios
 
-// Mocking navigate function
 const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate, // Mock useNavigate to return mockNavigate
+}));
 
 beforeEach(() => {
   jest.clearAllMocks();  // Clear any mocks before each test
@@ -36,7 +42,7 @@ describe("AddCloud Component", () => {
   test("displays error message when no cloud is selected", async () => {
     setup();
 
-    fireEvent.click(screen.getByText(/Add cloud/i));
+    fireEvent.click(screen.getByRole('button', { name: /Add cloud/i }));
 
     expect(screen.getByText(/No service selected/i)).toBeInTheDocument();
   });
@@ -48,7 +54,7 @@ describe("AddCloud Component", () => {
       target: { value: "" }
     });
 
-    fireEvent.click(screen.getByText(/Add cloud/i));
+    fireEvent.click(screen.getByRole('button', { name: /Add cloud/i }));
 
     expect(screen.getByText(/❌ No service selected/i)).toBeInTheDocument();
   });
@@ -59,7 +65,7 @@ describe("AddCloud Component", () => {
     fireEvent.change(screen.getByPlaceholderText(/Enter the chosen name of this storage cloud/i), {
       target: { value: "My Cloud" }
     });
-    fireEvent.change(screen.getByLabelText(/Select Cloud/i), {
+    fireEvent.change(screen.getByText(/Select Cloud/i), {
       target: { value: "google_drive" }
     });
 
@@ -69,7 +75,7 @@ describe("AddCloud Component", () => {
         useGoogleLogin: () => googleLoginSpy,
       };
     });
-    fireEvent.click(screen.getByText(/Add cloud/i));
+    fireEvent.click(screen.getByText(/Select Cloud/i));
 
     expect(googleLoginSpy).toHaveBeenCalled();
   });
@@ -82,7 +88,7 @@ describe("AddCloud Component", () => {
     fireEvent.change(screen.getByPlaceholderText(/Enter the chosen name of this storage cloud/i), {
       target: { value: "My Cloud" }
     });
-    fireEvent.change(screen.getByLabelText(/Select Cloud/i), {
+    fireEvent.change(screen.getByText(/Select Cloud/i), {
       target: { value: "box" }
     });
 
@@ -102,7 +108,7 @@ describe("AddCloud Component", () => {
     fireEvent.change(screen.getByPlaceholderText(/Enter the chosen name of this storage cloud/i), {
       target: { value: "My Cloud" }
     });
-    fireEvent.change(screen.getByLabelText(/Select Cloud/i), {
+    fireEvent.change(screen.getByRole('combobox', { name: /Select Cloud/i }), {
       target: { value: "dropbox" }
     });
 

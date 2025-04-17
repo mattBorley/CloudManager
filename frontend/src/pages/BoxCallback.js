@@ -10,7 +10,6 @@ const BoxCallback = () => {
 
   useEffect(() => {
     const handleCallback = async () => {
-      console.log("Starting Box callback")
       const code = searchParams.get("code");
       const cloudName = localStorage.getItem("cloudName");
       localStorage.removeItem("cloudName")
@@ -20,7 +19,6 @@ const BoxCallback = () => {
         navigate("/addcloud");
         return;
       }
-
       if (!cloudName) {
         console.error("No cloud name found.");
         navigate("/addcloud");

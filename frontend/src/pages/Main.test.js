@@ -4,6 +4,7 @@ import '@testing-library/jest-dom'; // for the "toBeInTheDocument" matcher
 import { BrowserRouter as Router, MemoryRouter } from 'react-router-dom';
 import axios from 'axios';
 import { getAccessToken } from '../utils/Token_Checks';
+import React from "react";
 
 // Mocking the axios GET method
 jest.mock('axios');
@@ -21,10 +22,33 @@ jest.mock('../components/CloudList', () => ({
   ),
 }));
 
+const mockNavigate = jest.fn(); // declared early
+
+jest.mock('react-router-dom', () => {
+  const actual = jest.requireActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate, // uses the pre-declared fn
+  };
+});
+
+
 jest.mock('../components/Tabs', () => ({
   __esModule: true,
   default: ({ cloudData }) => <div>{cloudData.length > 0 ? 'Tabs rendered' : 'No cloud data'}</div>,
 }));
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  Object.defineProperty(window, 'location', {
+    configurable: true,
+    value: {
+      ...window.location,
+      reload: jest.fn(),
+    },
+  });
+  jest.spyOn(window.localStorage.__proto__, 'removeItem');
+});
 
 describe('Main Component', () => {
   beforeEach(() => {
@@ -98,47 +122,40 @@ describe('Main Component', () => {
   });
 
   test('clicking "Log Out" clears tokens and navigates to login', () => {
-    const navigate = jest.fn();
-
     render(
       <MemoryRouter>
         <Main />
       </MemoryRouter>
     );
 
-    // Mock navigate function
     const logoutButton = screen.getByText(/Log Out/i);
     fireEvent.click(logoutButton);
 
-    // Check if localStorage is cleared
-    expect(localStorage.getItem('accessToken')).toBeNull();
-    expect(localStorage.getItem('refreshToken')).toBeNull();
+    // Check localStorage interactions
+    expect(localStorage.removeItem).toHaveBeenCalledTimes(2);
+    expect(localStorage.removeItem).toHaveBeenCalledWith('accessToken');
+    expect(localStorage.removeItem).toHaveBeenCalledWith('refreshToken');
 
-    // Check if navigate function is called
-    expect(navigate).toHaveBeenCalledWith('/login');
+    // Check navigation
+    expect(mockNavigate).toHaveBeenCalledWith('/login');
   });
 
-  test('clicking "Refresh Page" reloads the page', () => {
-    // Mock window.location.reload function
-    const reloadMock = jest.fn();
-    global.location.reload = reloadMock;
 
-    render(
-      <MemoryRouter>
-        <Main />
-      </MemoryRouter>
-    );
+ test('clicking "Refresh Page" reloads the page', () => {
+  render(
+    <MemoryRouter>
+      <Main />
+    </MemoryRouter>
+  );
 
-    const refreshButton = screen.getByText(/Refresh Page/i);
-    fireEvent.click(refreshButton);
+  const refreshButton = screen.getByText(/Refresh Page/i);
+  fireEvent.click(refreshButton);
 
-    // Check if the page refresh function is called
-    expect(reloadMock).toHaveBeenCalledTimes(1);
-  });
+  expect(window.location.reload).toHaveBeenCalledTimes(1);
+});
+
 
   test('clicking "Add Cloud" navigates to add cloud page', () => {
-    const navigate = jest.fn();
-
     render(
       <MemoryRouter>
         <Main />
@@ -148,8 +165,7 @@ describe('Main Component', () => {
     const addCloudButton = screen.getByText(/Add Cloud/i);
     fireEvent.click(addCloudButton);
 
-    // Check if navigate function is called
-    expect(navigate).toHaveBeenCalledWith('/addcloud');
+    expect(mockNavigate).toHaveBeenCalledWith('/addcloud');
   });
 
   test('TabsComponent renders with cloud data', async () => {

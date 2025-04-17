@@ -32,11 +32,9 @@ class BoxClass(OAuthBase):
 
     def get_authorization_url(self) -> str:
         auth_url = f"https://account.box.com/api/oauth2/authorize?client_id={self.app_key}&redirect_uri={self.redirect_uri}&response_type=code&scope=root_readonly"
-        print(f"Generated authorization URL: {auth_url}")
         return auth_url
 
     async def exchange_code_for_token(self, code: str):
-        print(f"Exchanging code for token: {code}")
         payload = {
             'grant_type': 'authorization_code',
             'code': code,
@@ -44,15 +42,12 @@ class BoxClass(OAuthBase):
             'client_secret': self.app_secret,
             'redirect_uri': self.redirect_uri,
         }
-        print(f"Code: {code}\nClient ID: {self.app_key}\nClient Secret: {self.app_secret}\nRedirect URI: {self.redirect_uri}")
 
         async with httpx.AsyncClient() as client:
             response = await client.post(TOKEN_URL, data=payload, headers={'Content-Type': 'application/x-www-form-urlencoded'})
             response_data = response.json()
-            print(f"Token exchange response: {response_data}")
 
             if response.status_code == 200:
-                print("Token exchange successful.")
                 return response_data
             else:
                 error_msg = response_data.get('error_description', 'Unknown error')
@@ -103,29 +98,19 @@ async def box_store_credentials(local_access_token: str, refresh_token: str, clo
     Adds Box account to the database and logs key actions.
     """
     try:
-        print("Storing credentials...")
-        print(f"Local access token: {local_access_token}")
         payload = get_payload_from_access(local_access_token)
-        print(f"Extracted payload: {payload}")
 
         user_email = payload.get("sub")
-        print(f"Extracted user email: {user_email}")
-
         local_user_id = get_user_id(user_email)
-        print(f"Local user ID: {local_user_id}")
 
         if not local_user_id:
-            print("Missing local_user_id.")
             raise HTTPException(status_code=400, detail="Missing local_user_id")
         if not refresh_token:
-            print("Missing refresh_token.")
             raise HTTPException(status_code=400, detail="Missing refresh_token")
         if not cloud_name:
-            print("Missing cloud_name.")
             raise HTTPException(status_code=400, detail="Missing cloud_name")
 
         insert_into_box_table(local_user_id, refresh_token, cloud_name)
-        print("Credentials successfully stored in database.")
 
     except Exception as e:
         error_msg = f"Error storing credentials in cloud {cloud_name}: {str(e)}"

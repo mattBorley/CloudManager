@@ -69,10 +69,8 @@ router = APIRouter()
 
 @router.get('/get_data')
 async def get_data(request: Request):
-
     authorization_header = request.headers.get("Authorization")
     local_access_token = check_header(authorization_header)
-
     try:
         payload = get_payload_from_access(local_access_token)
     except Exception as e:
@@ -80,7 +78,6 @@ async def get_data(request: Request):
         raise
 
     user_email = payload.get("sub")
-
     try:
         local_user_id = get_user_id(user_email)
     except Exception as e:
