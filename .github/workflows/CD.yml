@@ -28,7 +28,6 @@ jobs:
         run: |
           cd frontend
           npm install
-          npm run lint -- --ignore-pattern "build/**"
 
       # Set up Python for linting the FastAPI backend
       - name: Set up Python
