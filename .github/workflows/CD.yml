@@ -102,11 +102,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      #Checkout repo
+      # Checkout the repository (to get the CI/CD workflow itself)
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      #Set up the SSH private key from GitHub secrets
+      # Set up SSH private key to access the VM
       - name: Set up SSH private key
         run: |
           mkdir -p ~/.ssh
@@ -114,6 +114,26 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.VM_IP }} >> ~/.ssh/known_hosts
 
+      # Copy the GitHub Deploy Key to the VM
+      - name: Copy GitHub Deploy Key to VM
+        run: |
+          echo "${{ secrets.VM_DEPLOY_KEY }}" > ~/.ssh/github_deploy_key
+          chmod 600 ~/.ssh/github_deploy_key
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ~/.ssh/github_deploy_key ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }}:~/.ssh/github_deploy_key
+
+      # Configure GitHub access on VM using deploy key
+      - name: Configure GitHub SSH on VM
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          chmod 600 ~/.ssh/github_deploy_key
+          echo "Host github.com" >> ~/.ssh/config
+          echo "  IdentityFile ~/.ssh/github_deploy_key" >> ~/.ssh/config
+          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+          EOF
+
+      # Check Docker Installation
       - name: Check Docker Installation
         run: |
           ssh -T -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
@@ -123,9 +143,10 @@ jobs:
             curl -fsSL https://get.docker.com -o get-docker.sh
             sudo sh get-docker.sh
             sudo usermod -aG docker ${{ secrets.VM_USERNAME }}
-            fi
+          fi
           EOF
 
+      # Check Docker Compose Installation
       - name: Check Docker Compose Installation
         run: |
           ssh -T -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
@@ -137,47 +158,32 @@ jobs:
           fi
           EOF
 
-      - name: Set up Deploy Key
-        run: |
-          ssh -T -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
-          # Set up the deploy key for GitHub access (in VM)
-          echo ${{ secrets.VMPRIVATEKEY }} | base64 --decode > ~/.ssh/github_deploy_key
-          chmod 600 ~/.ssh/github_deploy_key
-          echo "Host github.com" >> ~/.ssh/config
-          echo "  IdentityFile ~/.ssh/github_deploy_key" >> ~/.ssh/config
-          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
-          EOF
-
+      # Clone or Pull the Repo on the VM
       - name: Pull Repo from Git
         run: |
           ssh -T -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
-          # Clone or pull the repository from GitHub          
           if [ ! -d "/home/${{ secrets.VM_USERNAME }}/cloudmanager" ]; then
-            git clone ${{ secrets.REPO_URL }} /home/${{ secrets.VM_USERNAME }}/cloudmanager
+            git clone git@github.com:YOUR_USERNAME/YOUR_REPO.git /home/${{ secrets.VM_USERNAME }}/cloudmanager
           else
             cd /home/${{ secrets.VM_USERNAME }}/cloudmanager
             git pull origin main
           fi
           EOF
 
+      # Pull Docker Images
       - name: Pull Docker Images from Registry
         run: |
           ssh -T -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
-          # Pull the latest Docker images
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/frontend:latest
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/backend:latest
           EOF
 
+      # Deploy the Application
       - name: Deploy App
         run: |
           ssh -T -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
-          # Navigate to the project directory (or change if necessary)
           cd /home/${{ secrets.VM_USERNAME }}/cloudmanager
-          
-          # If necessary, stop and remove old containers
           sudo docker-compose -f docker-compose.prod.yml down --remove-orphans
-          
-          # Bring up the containers (start the app)
           sudo docker-compose -f docker-compose.prod.yml up -d
           docker exec backend alembic upgrade head
           EOF
