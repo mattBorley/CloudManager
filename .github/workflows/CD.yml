@@ -118,6 +118,7 @@ jobs:
       - name: Upload GitHub Deploy Key to VM
         run: |
           echo "${{ secrets.VM_DEPLOY_KEY }}" > github_deploy_key
+          echo "${{ secrets.VM_DEPLOY_KEY_PUB }}" > github_deploy_key.pub
           scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no github_deploy_key ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }}:/home/${{ secrets.VM_USERNAME }}/.ssh/github_deploy_key
           ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
             chmod 600 ~/.ssh/github_deploy_key
