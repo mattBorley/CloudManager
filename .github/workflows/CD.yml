@@ -118,11 +118,6 @@ jobs:
       - name: Upload GitHub Deploy Key to VM
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'     
-            # Configure SSH to use the existing GitHub deploy key
-            echo "Host github.com" >> ~/.ssh/config
-            echo "  IdentityFile ~/.ssh/github_deploy_key" >> ~/.ssh/config
-            echo "  StrictHostKeyChecking no" >> ~/.ssh/config
-            
             chmod 600 ~/.ssh/github_deploy_key
             chmod 600 ~/.ssh/config
           EOF
@@ -156,10 +151,10 @@ jobs:
       - name: Pull Repo from Git
         run: |
           ssh -T -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
-          if [ ! -d "/home/${{ secrets.VM_USERNAME }}/cloudmanager" ]; then
-            git clone git@github.com:YOUR_USERNAME/YOUR_REPO.git /home/${{ secrets.VM_USERNAME }}/cloudmanager
+          if [ ! -d "/home/${{ secrets.VM_USERNAME }}/project" ]; then
+            git clone git@github.com:YOUR_USERNAME/YOUR_REPO.git /home/${{ secrets.VM_USERNAME }}/project
           else
-            cd /home/${{ secrets.VM_USERNAME }}/cloudmanager
+            cd /home/${{ secrets.VM_USERNAME }}/project
             git pull origin main
           fi
           EOF
