@@ -152,17 +152,32 @@ jobs:
           fi
           EOF
 
-      # Clone or Pull the Repo on the VM
       - name: Pull Repo from Git
         run: |
           ssh -T -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
-          if [ ! -d "/home/${{ secrets.VM_USERNAME }}/cloudmanager" ]; then
-            git clone git@github.com:mattBorley/CloudManager.git /home/${{ secrets.VM_USERNAME }}/cloudmanager
-          else
-            cd /home/${{ secrets.VM_USERNAME }}/cloudmanager
-            git pull origin main
-          fi
+            set -x  # <<< Turn on bash debugging (shows every command)
+      
+            echo "Current user: \$(whoami)"
+            echo "Checking SSH keys in ~/.ssh/"
+            ls -la ~/.ssh/
+      
+            echo "Testing SSH access to GitHub..."
+            ssh -i ~/.ssh/github_deploy_key -o StrictHostKeyChecking=no git@github.com || echo "SSH connection to GitHub failed"
+      
+            # If successful, continue with git clone or pull
+            PROJECT_DIR="/home/${{ secrets.VM_USERNAME }}/cloudmanager"
+            if [ ! -d "\$PROJECT_DIR" ]; then
+              echo "Cloning the repository..."
+              GIT_SSH_COMMAND="ssh -i ~/.ssh/github_deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no" git clone git@github.com:mattBorley/CloudManager.git "\$PROJECT_DIR"
+            else
+              echo "Pulling latest changes..."
+              cd "\$PROJECT_DIR"
+              GIT_SSH_COMMAND="ssh -i ~/.ssh/github_deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no" git pull origin main
+            fi
+      
+            set +x  # <<< Turn off debugging
           EOF
+
 
       # Pull Docker Images
       - name: Pull Docker Images from Registry
