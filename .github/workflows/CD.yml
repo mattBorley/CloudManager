@@ -118,6 +118,11 @@ jobs:
       - name: Upload GitHub Deploy Key to VM
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'     
+            # Configure SSH to use the existing GitHub deploy key
+            echo "Host github.com" >> ~/.ssh/config
+            echo "  IdentityFile ~/.ssh/github_deploy_key" >> ~/.ssh/config
+            echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+            
             chmod 600 ~/.ssh/github_deploy_key
             chmod 600 ~/.ssh/config
           EOF
@@ -150,13 +155,13 @@ jobs:
       # Clone or Pull the Repo on the VM
       - name: Pull Repo from Git
         run: |
-          ssh -T -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} bash <<EOF
-            if [ ! -d "/home/${{ secrets.VM_USERNAME }}/project" ]; then
-              git clone git@github.com:mattBorley/CloudManager.git /home/${{ secrets.VM_USERNAME }}/project
-            else
-              cd /home/${{ secrets.VM_USERNAME }}/project
-              git pull origin main
-            fi
+          ssh -T -i ~/.ssh/id_rsa ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IP }} << 'EOF'
+          if [ ! -d "/home/${{ secrets.VM_USERNAME }}/cloudmanager" ]; then
+            git clone git@github.com:mattBorley/CloudManager.git /home/${{ secrets.VM_USERNAME }}/cloudmanager
+          else
+            cd /home/${{ secrets.VM_USERNAME }}/cloudmanager
+            git pull origin main
+          fi
           EOF
 
       # Pull Docker Images
